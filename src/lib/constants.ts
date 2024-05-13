@@ -1,4 +1,5 @@
 import {FeeAmount} from "@uniswap/v3-sdk";
+import {Token} from "@uniswap/sdk-core";
 
 export const POOL_FACTORY_CONTRACT_ADDRESS =
     '0x1F98431c8aD98523631AE4a59f267346ea31F984'
@@ -33,10 +34,4 @@ export const constants: Constants = {
     },
 }
 
-export const WETH = {
-    chainId: 1,
-    address: '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2',
-    decimals: 18,
-    symbol: 'WETH',
-    name: 'Wrapped Ether'
-}
+export const WETH = new Token(1, '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2', 18, 'WETH', 'Wrapped Ether');

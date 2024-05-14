@@ -15,9 +15,8 @@ export async function quote(tokenIn: Token, tokenOut: Token, fee: number): Promi
         new ethers.JsonRpcProvider(constants.rpc.mainnet)
     )
     const poolConstants = await getPoolConstants(tokenIn, tokenOut, fee)
-
     const quotedAmountOut =
-        await quoterContract.quoteExactOutputSingle.staticCall(
+        await quoterContract.quoteExactInputSingle.staticCall(
             poolConstants.token0,
             poolConstants.token1,
             poolConstants.fee,
@@ -27,7 +26,8 @@ export async function quote(tokenIn: Token, tokenOut: Token, fee: number): Promi
             ).toString(),
             0
         )
-    console.log('quotedAmountOut', quotedAmountOut)
+
+    // console.log(quotedAmountOut * BigInt(poolConstants.liquidity) / BigInt(1e18) / BigInt(2900));
     return toReadableAmount(quotedAmountOut, tokenOut.decimals)
 }
 
@@ -35,6 +35,7 @@ async function getPoolConstants(tokenIn: Token, tokenOut: Token, fee: number): P
     token0: string
     token1: string
     fee: number
+    liquidity: number
 }> {
     const currentPoolAddress = computePoolAddress({
         factoryAddress: constants.POOL_FACTORY_CONTRACT_ADDRESS,
@@ -48,15 +49,18 @@ async function getPoolConstants(tokenIn: Token, tokenOut: Token, fee: number): P
         IUniswapV3PoolABI.abi,
         new ethers.JsonRpcProvider(constants.rpc.mainnet)
     )
-    const [token0, token1, feeFound] = await Promise.all([
+    const [token0, token1, feeFound, liquidity] = await Promise.all([
         poolContract.token0(),
         poolContract.token1(),
         poolContract.fee(),
+        poolContract.liquidity()
     ])
+
 
     return {
         token0,
         token1,
         fee,
+        liquidity
     }
 }

@@ -1,6 +1,5 @@
 import {ethers, JsonRpcProvider, Contract, getAddress} from "ethers";
 import {constants} from "./constants";
-import Quoter from '@uniswap/v3-periphery/artifacts/contracts/lens/Quoter.sol/Quoter.json'
 import {Token} from "@uniswap/sdk-core";
 
 const ERC20_ABI = [
@@ -26,6 +25,7 @@ const getTokenFromAddress = async (address: string) => {
 
     const symbol = await tokenContract.symbol();
     const decimals = await tokenContract.decimals();
+
     return new Token(
         1,
         getAddress(address),

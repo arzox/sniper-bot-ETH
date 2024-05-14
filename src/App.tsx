@@ -8,13 +8,20 @@ import getTokenFromAddress from "./lib/tokenInfo";
 const App = () => {
 
     const [price, setPrice] = useState("0")
+    const [token, setToken] = useState("")
+
+    const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+        setToken(event.target.value);  // Update the state when the input changes
+    };
+
     const onQuote = useCallback(async () => {
-        let tokenSeek = await getTokenFromAddress("0x6982508145454ce325ddbe47a25d4ec3d2311933")
-        setPrice(await quote(tokenSeek, WETH, FeeAmount.MEDIUM))
-    }, [])
+        let tokenSeek = await getTokenFromAddress(token)
+        setPrice(await quote(tokenSeek, WETH, FeeAmount.HIGH))
+    }, [token])
 
     return (
         <div className="App">
+            <input type="text" onChange={handleChange}/>
             <h1>{price}</h1>
             <button onClick={onQuote}>
                 <p>Get Quote</p>

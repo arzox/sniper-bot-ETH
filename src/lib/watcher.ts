@@ -1,9 +1,9 @@
 import axios from 'axios';
-import { create, all } from 'mathjs';
 import {Token} from "@uniswap/sdk-core";
 import getTokenFromAddress from "./tokenInfo";
-
-const math = create(all);
+import {quote} from "./quote";
+import {WETH} from "./constants";
+import {FeeAmount} from "@uniswap/v3-sdk";
 
 interface TokenData {
     token: Token;
@@ -18,21 +18,19 @@ class TokensWatcher {
     }
 
     addToken(tokenAddress: string): void {
-        this.tokens[tokenAddress] = { prices: [], token: getTokenFromAddress(tokenAddress) };
+        getTokenFromAddress(tokenAddress).then(value =>
+            this.tokens[tokenAddress] = { prices: [], token: value }).catch(
+                e => console.error("Error adding token", e)
+        );
     }
 
-    async fetchPrices(): Promise<void> {
+    fetchPrices(): void {
         if (Object.keys(this.tokens).length > 0) {
-            const tokensPrices = await this.oinchAPI.getPrices(Object.keys(this.tokens));
-            console.log(tokensPrices);
-            for (const token in tokensPrices) {
-                if (tokensPrices.hasOwnProperty(token)) {
-                    if (this.tokens[token]) {
-                        this.tokens[token].prices.push(tokensPrices[token]);
-                    } else {
-                        console.log(`Token ${token} not found in the list of tokens`);
-                    }
-                }
+            for (const [tokenAddress, tokenInfo] of Object.entries(this.tokens)) {
+                quote(tokenInfo.token, WETH, FeeAmount.HIGH).then(tokensPrice => {
+                    console.log(`Price for ${tokenAddress}: ${tokensPrice}`);
+                    this.tokens[tokenAddress].prices.push(Number(tokensPrice));
+                }).catch(e => console.error("Error fetching prices", e));
             }
             console.log(JSON.stringify(this.tokens));
         }
@@ -51,17 +49,25 @@ class TokensWatcher {
         }
     }
 
-    private calculateEMA(prices: number[], span: number): number {
-        // Calculating EMA using mathjs
-        const weights = math.exponentialSmooth(prices, 2 / (span + 1));
-        return weights[weights.length - 1]; // last value is the latest EMA
+    calculateEMA(prices: number[], period: number): number {
+        const smoothing = 2;
+        let ema = prices[0]; // starting with the first price as the initial EMA
+
+        for (let price of prices) {
+            ema = (price * (smoothing / (1 + period))) + (ema * (1 - (smoothing / (1 + period))));
+        }
+
+        return ema;
     }
 
     sell(token: string): void {
         console.log(`Sell signal for ${token}`);
+        this.clean(token);
     }
 
     clean(token: string): void {
         delete this.tokens[token];
     }
 }
+
+export default TokensWatcher;

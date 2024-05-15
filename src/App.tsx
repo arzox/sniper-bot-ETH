@@ -1,20 +1,17 @@
 import {ChangeTextButton} from "./components/components";
 import {useState} from "react";
-import TokenSearcher from "./lib/research";
-import DextoolsAPI from "./lib/dextoolsAPI";
-import {constants} from "./lib/constants";
+import TokenSniper from "./lib/main";
 
 const App = () => {
     const [isRunning, setIsRunning] = useState(false);
-    const api = new DextoolsAPI(constants.api.dextools);
-    const tokenSearcher = new TokenSearcher(api);
+    const tokenSniper = new TokenSniper();
 
     const setRunning = () => {
         setIsRunning(!isRunning);
         if (!isRunning) {
-            tokenSearcher.start();
+            tokenSniper.start();
         } else {
-            tokenSearcher.stop();
+            tokenSniper.stop();
         }
     }
 

@@ -27,7 +27,6 @@ class TokenSearcher {
     private api: dextoolsAPI;
     private workbook: Workbook;
     private worksheet: Worksheet
-    private isRunning: boolean = false;
 
     constructor(api: dextoolsAPI) {
         this.api = api;
@@ -47,13 +46,12 @@ class TokenSearcher {
         ];
     }
 
-    public start(): void {
-        this.isRunning = true;
-        console.log(this.getTokenList("ether", 60 * 4))
+    public getSheet(): Worksheet {
+        return this.worksheet;
     }
 
-    public stop(): void {
-        this.isRunning = false;
+    public saveSheet(): void {
+        this.workbook.xlsx.writeFile("tokens.xlsx");
     }
 
     private linkLastCell(ws: any, column: number, address?: string, chain: string = "ether") {
@@ -62,27 +60,30 @@ class TokenSearcher {
         cell.style = { font: { color: { argb: 'FF0000FF' }, underline: true } };
     }
 
-    public async storeToken(info: any, token: Token, chain: string) {
+    public storeToken(chain: string, token: Token, info: any) {
         this.worksheet.addRow([
             token.symbol, info.address,
             `https://www.dextools.io/app/en/${chain}/pair-explorer/${info.address}`,
             info.mcap, info.fdv, info.holders
         ]);
         this.linkLastCell(this.worksheet, 3, info.address, chain);
-        await this.workbook.xlsx.writeFile("tokens.xlsx");
     }
 
-    public async securityCheck(token: Token, chain: string, debug: boolean = false): Promise<any | false> {
+    public async securityCheck(chain: string, token: Token, debug: boolean = false): Promise<any | false> {
         try {
             const auditResponse = await this.api.getTokenAudit(chain, token.address);
-            const audit: Audit = auditResponse.data.data;
+            const audit: Audit = auditResponse.data;
+
+            await this.sleep(1000);
 
             const infoResponse = await this.api.getTokenInfo(chain, token.address);
-            const info: Info = infoResponse.data.data;
+            const info: Info = infoResponse.data;
+
+            await this.sleep(1000);
 
             if (audit.isPotentiallyScam === "yes" || audit.isHoneypot === "yes" ||
                 (audit.isContractRenounced !== "yes") ||
-                (audit.sellTax.max > 0.02 || audit.buyTax.max > 0.02) ||
+                (audit.sellTax.max > 0.1 || audit.buyTax.max > 0.02) ||
                 (info.holders < 10)) {
                 throw new Error();
             }
@@ -99,8 +100,6 @@ class TokenSearcher {
     public async getTokenList(chain: string, timeRange: number, pageSize: number = 50): Promise<any> {
         const now = toZonedTime(new Date(), 'UTC');
 
-        console.log(addHours(subMinutes(now, timeRange), 2).toISOString(),
-            addHours(now, 2).toISOString())
         const tokensListResponse = await this.api.getTokenList(chain,
             "creationTime",
             "desc",
@@ -110,9 +109,11 @@ class TokenSearcher {
             pageSize
         );
 
-        console.log(tokensListResponse)
-        console.log(`${tokensListResponse.data.tokens.length} tokens found`);
         return tokensListResponse.data.tokens;
+    }
+
+    private async sleep(number: number) {
+        return new Promise(resolve => setTimeout(resolve, number));
     }
 }
 

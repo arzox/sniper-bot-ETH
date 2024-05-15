@@ -8,7 +8,7 @@ import {
 import { toReadableAmount, fromReadableAmount } from './conversion'
 import {Token} from "@uniswap/sdk-core";
 
-export async function quote(tokenIn: Token, tokenOut: Token, fee: number): Promise<string> {
+export async function quote(tokenIn: Token, tokenOut: Token, fee: number): Promise<BigInt> {
     const quoterContract = new ethers.Contract(
         constants.QUOTER_CONTRACT_ADDRESS,
         Quoter.abi,
@@ -28,7 +28,7 @@ export async function quote(tokenIn: Token, tokenOut: Token, fee: number): Promi
         )
 
     // console.log(quotedAmountOut * BigInt(poolConstants.liquidity) / BigInt(1e18) / BigInt(2900));
-    return toReadableAmount(quotedAmountOut, tokenOut.decimals)
+    return quotedAmountOut / BigInt(10 ** tokenOut.decimals)
 }
 
 async function getPoolConstants(tokenIn: Token, tokenOut: Token, fee: number): Promise<{

@@ -1,4 +1,3 @@
-import {FeeAmount} from "@uniswap/v3-sdk";
 import {Token} from "@uniswap/sdk-core";
 
 export const POOL_FACTORY_CONTRACT_ADDRESS =

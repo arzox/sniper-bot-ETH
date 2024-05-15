@@ -1,32 +1,30 @@
-import {useCallback, useEffect, useState} from "react";
-import {quote} from "./lib/quote";
-import {FeeAmount} from "@uniswap/v3-sdk";
-import tokenInfo from "./lib/tokenInfo";
-import {WETH} from "./lib/constants";
-import getTokenFromAddress from "./lib/tokenInfo";
+import {ChangeTextButton} from "./components/components";
+import {useState} from "react";
+import TokenSearcher from "./lib/research";
+import DextoolsAPI from "./lib/dextoolsAPI";
+import {constants} from "./lib/constants";
 
 const App = () => {
+    const [isRunning, setIsRunning] = useState(false);
+    const api = new DextoolsAPI(constants.api.dextools);
+    const tokenSearcher = new TokenSearcher(api);
 
-    const [price, setPrice] = useState("0")
-    const [token, setToken] = useState("")
-
-    const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-        setToken(event.target.value);  // Update the state when the input changes
-    };
-
-    const onQuote = useCallback(async () => {
-        let tokenSeek = await getTokenFromAddress(token)
-        setPrice(await quote(tokenSeek, WETH, FeeAmount.HIGH))
-    }, [token])
+    const setRunning = () => {
+        setIsRunning(!isRunning);
+        if (!isRunning) {
+            tokenSearcher.start();
+        } else {
+            tokenSearcher.stop();
+        }
+    }
 
     return (
-        <div className="App">
-            <input type="text" onChange={handleChange}/>
-            <h1>{price}</h1>
-            <button onClick={onQuote}>
-                <p>Get Quote</p>
-            </button>
-        </div>
+        <main className="flex justify-center items-center flex-col w-2/3 m-auto mt-10">
+            <ChangeTextButton initialText="Start" alternateText="Stop" changeState={setRunning}/>
+            <div className="">
+
+            </div>
+        </main>
     )
 }
 

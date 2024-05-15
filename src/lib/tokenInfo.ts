@@ -1,4 +1,4 @@
-import {ethers, JsonRpcProvider, Contract, getAddress} from "ethers";
+import {JsonRpcProvider, Contract, getAddress} from "ethers";
 import {constants} from "./constants";
 import {Token} from "@uniswap/sdk-core";
 
@@ -25,7 +25,6 @@ const getTokenFromAddress = async (address: string) => {
 
     const symbol = await tokenContract.symbol();
     const decimals = await tokenContract.decimals();
-
     return new Token(
         1,
         getAddress(address),

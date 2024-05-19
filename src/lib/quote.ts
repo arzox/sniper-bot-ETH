@@ -1,66 +1,31 @@
 import { ethers } from 'ethers'
-import { computePoolAddress } from '@uniswap/v3-sdk'
-import Quoter from '@uniswap/v3-periphery/artifacts/contracts/lens/Quoter.sol/Quoter.json'
-import IUniswapV3PoolABI from '@uniswap/v3-core/artifacts/contracts/interfaces/IUniswapV3Pool.sol/IUniswapV3Pool.json'
-import {
-    constants,
-} from './constants'
-import { toReadableAmount, fromReadableAmount } from './conversion'
-import {Token} from "@uniswap/sdk-core";
+import uniswapV2poolABI from '@uniswap/v2-core/build/IUniswapV2Pair.json'
+import {constants} from './constants'
+import { Token, CurrencyAmount, TradeType } from "@uniswap/sdk-core";
+import { Route, Pair, Trade } from '@uniswap/v2-sdk'
 
-export async function quote(tokenIn: Token, tokenOut: Token, fee: number): Promise<BigInt> {
-    const quoterContract = new ethers.Contract(
-        constants.QUOTER_CONTRACT_ADDRESS,
-        Quoter.abi,
-        new ethers.JsonRpcProvider(constants.rpc.mainnet)
-    )
-    const poolConstants = await getPoolConstants(tokenIn, tokenOut, fee)
-    const quotedAmountOut =
-        await quoterContract.quoteExactInputSingle.staticCall(
-            poolConstants.token0,
-            poolConstants.token1,
-            poolConstants.fee,
-            fromReadableAmount(
-                1,
-                tokenIn.decimals
-            ).toString(),
-            0
-        )
+async function createPair(tokeIn: Token, tokenOut: Token): Promise<Pair> {
+    const pairAddress = Pair.getAddress(tokeIn, tokenOut)
 
-    // console.log(quotedAmountOut * BigInt(poolConstants.liquidity) / BigInt(1e18) / BigInt(2900));
-    return quotedAmountOut / BigInt(10 ** tokenOut.decimals)
+    // Setup provider, import necessary ABI ...
+    const pairContract = new ethers.Contract(pairAddress, JSON.stringify(uniswapV2poolABI.abi), new ethers.JsonRpcProvider(constants.rpc.mainnet))
+    const reserves = await pairContract["getReserves"]()
+    const [reserve0, reserve1] = reserves
+
+    const tokens = [tokeIn, tokenOut]
+    const [token0, token1] = tokens[0].sortsBefore(tokens[1]) ? tokens : [tokens[1], tokens[0]]
+
+    return new Pair(CurrencyAmount.fromRawAmount(token0, reserve0.toString()), CurrencyAmount.fromRawAmount(token1, reserve1.toString()))
 }
 
-async function getPoolConstants(tokenIn: Token, tokenOut: Token, fee: number): Promise<{
-    token0: string
-    token1: string
-    fee: number
-    liquidity: number
-}> {
-    const currentPoolAddress = computePoolAddress({
-        factoryAddress: constants.POOL_FACTORY_CONTRACT_ADDRESS,
-        tokenA: tokenIn,
-        tokenB: tokenOut,
-        fee: fee,
-    })
+export async function quote(tokenIn: Token, tokenOut: Token): Promise<number> {
 
-    const poolContract = new ethers.Contract(
-        currentPoolAddress,
-        IUniswapV3PoolABI.abi,
-        new ethers.JsonRpcProvider(constants.rpc.mainnet)
-    )
-    const [token0, token1, feeFound, liquidity] = await Promise.all([
-        poolContract.token0(),
-        poolContract.token1(),
-        poolContract.fee(),
-        poolContract.liquidity()
-    ])
+    // To learn how to get Pair data, refer to the previous guide.
+    const pair = await createPair(tokenIn, tokenOut)
 
+    const route = new Route([pair], tokenIn, tokenOut)
 
-    return {
-        token0,
-        token1,
-        fee,
-        liquidity
-    }
+    const trade = new Trade(route, CurrencyAmount.fromRawAmount(tokenIn, '1000000000000000000'), TradeType.EXACT_INPUT)
+
+    return parseInt(route.midPrice.toSignificant(10))
 }

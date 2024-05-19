@@ -1,10 +1,15 @@
 import TokenSearcher from "./research";
-import {constants} from "./constants";
+import {constants, WETH} from "./constants";
 import DextoolsAPI from "./dextoolsAPI";
 import Worksheet from "exceljs/index";
 import TokensWatcher from "./watcher";
+import {Token} from "@uniswap/sdk-core";
+import {quote} from "./quote";
+import getTokenFromAddress from "./tokenInfo";
 
 const dexToolsApi = new DextoolsAPI(constants.api.dextools);
+
+type TokenCallback = (token: Token) => void
 
 class TokenSniper {
     chain: string = "ether";
@@ -15,14 +20,22 @@ class TokenSniper {
     tokenWatcher: TokensWatcher = new TokensWatcher();
 
     isRunning: boolean = false;
+    tokenCallback: TokenCallback;
 
-    constructor() {
+    constructor(tokenCallback : TokenCallback) {
         this.worksheet = this.tokenSearcher.getSheet()
+        this.tokenCallback = tokenCallback;
     }
 
     public start(): void {
         this.isRunning = true;
         this.main().then(() => console.log("Done"));
+
+        getTokenFromAddress("0x6982508145454ce325ddbe47a25d4ec3d2311933").then((token) => {
+            quote(WETH, token).then((price) => {
+                console.log(`Price: ${price}`);
+            });
+        });
     }
 
     public stop(): void {
@@ -41,6 +54,7 @@ class TokenSniper {
                     this.tokenSearcher.storeToken(this.chain, token, security);
 
                     this.tokenWatcher.addToken(token.address);
+                    this.tokenCallback(token);
                     // this.buyToken(token.address);
                 }
                 console.log("requesting next token");

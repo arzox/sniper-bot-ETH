@@ -27,7 +27,7 @@ class TokensWatcher {
     fetchPrices(): void {
         if (Object.keys(this.tokens).length > 0) {
             for (const [tokenAddress, tokenInfo] of Object.entries(this.tokens)) {
-                quote(tokenInfo.token, WETH, FeeAmount.HIGH).then(tokensPrice => {
+                quote(tokenInfo.token, WETH).then(tokensPrice => {
                     console.log(`Price for ${tokenAddress}: ${tokensPrice}`);
                     this.tokens[tokenAddress].prices.push(Number(tokensPrice));
                 }).catch(e => console.error("Error fetching prices", e));

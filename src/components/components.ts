@@ -1,3 +1,4 @@
 import ChangeTextButton from "./changeTextButton";
+import TokenDisplay from "./TokenDisplay";
 
-export {ChangeTextButton};
+export {ChangeTextButton, TokenDisplay};

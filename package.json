@@ -10,6 +10,7 @@
     "@types/node": "^16.18.97",
     "@types/react": "^18.3.2",
     "@types/react-dom": "^18.3.0",
+    "@uniswap/v2-sdk": "^4.3.2",
     "@uniswap/v3-sdk": "^3.11.2",
     "axios": "^1.6.8",
     "date-fns": "^3.6.0",

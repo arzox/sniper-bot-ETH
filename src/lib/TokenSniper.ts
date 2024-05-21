@@ -9,7 +9,13 @@ import getTokenFromAddress from "./tokenInfo";
 
 const dexToolsApi = new DextoolsAPI(constants.api.dextools);
 
-type TokenCallback = (token: Token) => void
+type TokenInfo = {
+    token: Token;
+    price: string;
+}
+
+type TokenCallback = (token: TokenInfo) => void
+type IsLoadingCallback = (isLoading: boolean) => void
 
 class TokenSniper {
     chain: string = "ether";
@@ -21,10 +27,12 @@ class TokenSniper {
 
     isRunning: boolean = false;
     tokenCallback: TokenCallback;
+    isLoadingCallback: IsLoadingCallback;
 
-    constructor(tokenCallback : TokenCallback) {
+    constructor(tokenCallback : TokenCallback, isLoadingCallback: IsLoadingCallback) {
         this.worksheet = this.tokenSearcher.getSheet()
         this.tokenCallback = tokenCallback;
+        this.isLoadingCallback = isLoadingCallback;
     }
 
     public start(): void {
@@ -44,7 +52,8 @@ class TokenSniper {
 
     async main() {
         while (this.isRunning) {
-            const tokens = await this.tokenSearcher.getTokenList(this.chain, this.refreshRate, 10);
+            this.isLoadingCallback(true);
+            const tokens = await this.tokenSearcher.getTokenList(this.chain, this.refreshRate, 50);
             await this.sleep(1000);
             console.log(`Found ${tokens.length} tokens`);
             for (const token of tokens) {
@@ -53,12 +62,17 @@ class TokenSniper {
                     console.log(`Token ${token.address} is promising`);
                     this.tokenSearcher.storeToken(this.chain, token, security);
 
+
                     this.tokenWatcher.addToken(token.address);
-                    this.tokenCallback(token);
+                    quote(WETH, token).then((price) => {
+                        this.tokenCallback({token: token, price: price.toString()})
+                    });
                     // this.buyToken(token.address);
                 }
                 console.log("requesting next token");
             }
+            this.isLoadingCallback(false);
+
 
             this.tokenWatcher.fetchPrices();
             this.tokenWatcher.calculateEMAs();
@@ -73,4 +87,5 @@ class TokenSniper {
     }
 }
 
-export default TokenSniper;
+export {TokenSniper};
+export type { TokenInfo };

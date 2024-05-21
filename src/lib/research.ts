@@ -81,7 +81,7 @@ class TokenSearcher {
 
             await this.sleep(1000);
 
-            if (audit.isPotentiallyScam === "yes" || audit.isHoneypot === "yes" ||
+            if (audit.isPotentiallyScam === "yes" || audit.isHoneypot !== "no" ||
                 (audit.isContractRenounced !== "yes") ||
                 (audit.sellTax.max > 0.1 || audit.buyTax.max > 0.02) ||
                 (info.holders < 10)) {

@@ -1,7 +1,7 @@
 import React, {useEffect, useState} from 'react';
 import {TokenSniper, TokenInfo} from "../lib/TokenSniper";
 import {WETH} from "../lib/constants";
-
+import {FormatTokenPrice} from "./components";
 
 
 const TokenDisplay: React.FC<{ isRunning: boolean }> = ({isRunning}) => {
@@ -53,7 +53,7 @@ const TokenDisplay: React.FC<{ isRunning: boolean }> = ({isRunning}) => {
                                                              // href={"https://www.dextools.io/app/en/ether/pair-explorer/" + token.address}
                                                              target="_blank">{tokenInfo.token.symbol}</a></td>
                                 <td className="py-2 pl-2">{tokenInfo.token.address}</td>
-                                <td>{tokenInfo.price}</td>
+                                <td>${FormatTokenPrice(tokenInfo.price)}</td>
                             </tr>
                         ))}
                         {isLoading && (

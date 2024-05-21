@@ -31,8 +31,7 @@ export async function quote(tokenIn: Token, tokenOut: Token): Promise<number> {
 
     const trade = new Trade(route, CurrencyAmount.fromRawAmount(tokenIn, '1000000000000000000'), TradeType.EXACT_INPUT)
 
-    console.log(`Trade: ${trade.executionPrice.toSignificant(10)}`);
-    return parseInt(route.midPrice.toSignificant(10))
+    return parseFloat(route.midPrice.invert().toSignificant(2))
 }
 
 export async function buyToken(token: Token): Promise<void> {

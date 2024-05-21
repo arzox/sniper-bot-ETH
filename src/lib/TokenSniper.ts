@@ -38,12 +38,6 @@ class TokenSniper {
     public start(): void {
         this.isRunning = true;
         this.main().then(() => console.log("Done"));
-
-        getTokenFromAddress("0x6982508145454ce325ddbe47a25d4ec3d2311933").then((token) => {
-            quote(WETH, token).then((price) => {
-                console.log(`Price: ${price}`);
-            });
-        });
     }
 
     public stop(): void {
@@ -59,17 +53,20 @@ class TokenSniper {
             for (const token of tokens) {
                 const security = await this.tokenSearcher.securityCheck(this.chain, token, false);
                 if (security) {
-                    console.log(`Token ${token.address} is promising`);
                     this.tokenSearcher.storeToken(this.chain, token, security);
 
 
                     this.tokenWatcher.addToken(token.address);
-                    quote(WETH, token).then((price) => {
-                        this.tokenCallback({token: token, price: price.toString()})
-                    });
+                    getTokenFromAddress(token.address).then(token => {
+                        quote(WETH, token).then((price) => {
+                            this.tokenCallback({token: token, price: price.toFixed(18)})
+                        }).catch(e => {
+                            this.tokenCallback({token: token, price: "0"})
+                            console.error("Error fetching price", e);
+                        });
+                    })
                     // this.buyToken(token.address);
                 }
-                console.log("requesting next token");
             }
             this.isLoadingCallback(false);
 

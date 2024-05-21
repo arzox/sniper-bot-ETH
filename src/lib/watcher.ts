@@ -30,7 +30,7 @@ class TokensWatcher {
                 const tokenPrice = await quote(WETH, tokenInfo.token)
                 this.tokens[tokenAddress].prices.push(Number(tokenPrice))
             }
-            console.log(JSON.stringify(this.tokens));
+            //console.log(JSON.stringify(this.tokens, null, 2));
         } else {
             console.log("No tokens to fetch");
         }

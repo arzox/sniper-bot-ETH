@@ -13,7 +13,7 @@ type TokenCallback = (token: Token) => void
 
 class TokenSniper {
     chain: string = "ether";
-    refreshRate: number = 60 * 3; // in minutes, converted from 60 * 4
+    refreshRate: number = 60 * 4; // in minutes, converted from 60 * 4
     worksheet: Worksheet; // type for sheet, to be defined based on actual use
 
     tokenSearcher: TokenSearcher = new TokenSearcher(dexToolsApi);
@@ -44,7 +44,7 @@ class TokenSniper {
 
     async main() {
         while (this.isRunning) {
-            const tokens = await this.tokenSearcher.getTokenList(this.chain, this.refreshRate);
+            const tokens = await this.tokenSearcher.getTokenList(this.chain, this.refreshRate, 10);
             await this.sleep(1000);
             console.log(`Found ${tokens.length} tokens`);
             for (const token of tokens) {

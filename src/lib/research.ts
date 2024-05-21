@@ -102,7 +102,7 @@ class TokenSearcher {
 
         const tokensListResponse = await this.api.getTokenList(chain,
             "creationTime",
-            "desc",
+            "asc",
             addHours(subMinutes(now, timeRange), 2).toISOString(),
             addHours(now, 2).toISOString(),
             0,

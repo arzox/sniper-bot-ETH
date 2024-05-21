@@ -24,15 +24,15 @@ class TokensWatcher {
         );
     }
 
-    fetchPrices(): void {
+    async fetchPrices(): Promise<void> {
         if (Object.keys(this.tokens).length > 0) {
             for (const [tokenAddress, tokenInfo] of Object.entries(this.tokens)) {
-                quote(tokenInfo.token, WETH).then(tokensPrice => {
-                    console.log(`Price for ${tokenAddress}: ${tokensPrice}`);
-                    this.tokens[tokenAddress].prices.push(Number(tokensPrice));
-                }).catch(e => console.error("Error fetching prices", e));
+                const tokenPrice = await quote(WETH, tokenInfo.token)
+                this.tokens[tokenAddress].prices.push(Number(tokenPrice))
             }
             console.log(JSON.stringify(this.tokens));
+        } else {
+            console.log("No tokens to fetch");
         }
     }
 

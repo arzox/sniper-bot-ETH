@@ -1,6 +1,6 @@
 import { ethers } from 'ethers'
 import uniswapV2poolABI from '@uniswap/v2-core/build/IUniswapV2Pair.json'
-import {constants} from './constants'
+import {constants, WETH} from './constants'
 import { Token, CurrencyAmount, TradeType } from "@uniswap/sdk-core";
 import { Route, Pair, Trade } from '@uniswap/v2-sdk'
 
@@ -28,4 +28,9 @@ export async function quote(tokenIn: Token, tokenOut: Token): Promise<number> {
     const trade = new Trade(route, CurrencyAmount.fromRawAmount(tokenIn, '1000000000000000000'), TradeType.EXACT_INPUT)
 
     return parseInt(route.midPrice.toSignificant(10))
+}
+
+export async function buyToken(token: Token): Promise<void> {
+    const price = await quote(WETH, token)
+    console.log(`Price: ${price}`)
 }

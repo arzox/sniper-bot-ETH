@@ -13,10 +13,14 @@ export interface Constants {
         localhost: string
     }
     api: {
-        "dextools": string,
-        "oinch": string,
-        "uniswap": string
-    }
+        dextools: string,
+        oinch: string,
+        uniswap: string
+    },
+    wallet: {
+        address: string,
+        privateKey: string
+    },
 }
 
 export const constants: Constants = {
@@ -30,6 +34,10 @@ export const constants: Constants = {
         "dextools": "NiPgDIMeP919s4QlpvfU335aC3CxyVE592ig4xnf",
         "oinch": "V047jxydzQHDuKDFMIkAPr72vGltgYfR",
         "uniswap": ""
+    },
+    wallet: {
+        address: "test",
+        privateKey: "test"
     },
 }
 

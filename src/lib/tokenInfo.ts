@@ -19,16 +19,6 @@ const ERC20_ABI = [
     }
 ];
 
-const ERC721_ABI = [
-    {
-        "inputs": [{"internalType": "uint256", "name": "tokenId", "type": "uint256"}],
-        "name": "tokenURI",
-        "outputs": [{"internalType": "string", "name": "", "type": "string"}],
-        "stateMutability": "view",
-        "type": "function"
-    }
-];
-
 const getTokenFromAddress = async (address: string) => {
     const provider = new JsonRpcProvider(constants.rpc.mainnet);
     const tokenContract = new Contract(getAddress(address), ERC20_ABI, provider);
@@ -42,12 +32,5 @@ const getTokenFromAddress = async (address: string) => {
         symbol,
     )
 };
-
-const getTokenURI = async (address: string) => {
-    const provider = new JsonRpcProvider(constants.rpc.mainnet);
-    const tokenContract = new Contract(getAddress(address), ERC721_ABI, provider);
-
-    return await tokenContract.tokenURI();
-}
 
 export default getTokenFromAddress;

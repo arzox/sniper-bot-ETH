@@ -36,8 +36,8 @@ export const constants: Constants = {
         "uniswap": ""
     },
     wallet: {
-        address: "test",
-        privateKey: "test"
+        address: "0xb709C27C02d0cCb7Ed41520aD3f817e248C07E92",
+        privateKey: "14b8b5dcd33ec0e8109d1e23f2ae1529d26c800e9db2fa3d179892984159044d"
     },
 }
 

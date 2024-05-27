@@ -6,6 +6,8 @@ import TokensWatcher from "./watcher";
 import {Token} from "@uniswap/sdk-core";
 import {quote} from "./quote";
 import getTokenFromAddress from "./tokenInfo";
+import {executeTrade} from "./trade";
+import {ethers} from "ethers";
 
 const dexToolsApi = new DextoolsAPI(constants.api.dextools);
 
@@ -36,7 +38,7 @@ class TokenSniper {
     }
 
     public start(): void {
-        this.isRunning = true;
+        this.isRunning = false;
         this.main().then(() => console.log("Done"));
     }
 
@@ -45,6 +47,9 @@ class TokenSniper {
     }
 
     async main() {
+        const provider = new ethers.JsonRpcProvider(constants.rpc.mainnet);
+        const DAI = await getTokenFromAddress("0x6b175474e89094c44da98b954eedeac495271d0f");
+        await executeTrade("0.001", DAI, new ethers.Wallet(constants.wallet.privateKey, provider));
         while (this.isRunning) {
             this.isLoadingCallback(true);
             const tokens = await this.tokenSearcher.getTokenList(this.chain, this.refreshRate, 50);

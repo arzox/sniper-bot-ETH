@@ -2,6 +2,7 @@ import React, {useEffect, useState} from 'react';
 import {TokenSniper, TokenInfo} from "../lib/TokenSniper";
 import {WETH} from "../lib/constants";
 import {FormatTokenPrice} from "./components";
+import {ethers} from "ethers";
 
 
 const TokenDisplay: React.FC<{ isRunning: boolean }> = ({isRunning}) => {
@@ -42,7 +43,7 @@ const TokenDisplay: React.FC<{ isRunning: boolean }> = ({isRunning}) => {
                 <tbody>
                 {tokens.length === 0 && !isLoading ? (
                     <tr>
-                        <td>No tokens Fetch</td>
+                        <td>{ethers.parseUnits("0.01", WETH.decimals).toString()}</td>
                     </tr>
                 ) : (
                     <>

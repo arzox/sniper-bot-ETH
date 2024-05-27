@@ -4,7 +4,7 @@ import {constants, WETH} from './constants'
 import { Token, CurrencyAmount, TradeType } from "@uniswap/sdk-core";
 import { Route, Pair, Trade } from '@uniswap/v2-sdk'
 
-async function createPair(tokeIn: Token, tokenOut: Token): Promise<Pair> {
+export async function createPair(tokeIn: Token, tokenOut: Token): Promise<Pair> {
     try {
         const pairAddress = Pair.getAddress(tokeIn, tokenOut)
         // Setup provider, import necessary ABI ...

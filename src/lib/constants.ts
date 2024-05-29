@@ -10,6 +10,7 @@ export interface Constants {
     QUOTER_CONTRACT_ADDRESS: string
     rpc: {
         mainnet: string
+        linea: string
         localhost: string
     }
     api: {
@@ -27,7 +28,8 @@ export const constants: Constants = {
     POOL_FACTORY_CONTRACT_ADDRESS: '0x1F98431c8aD98523631AE4a59f267346ea31F984',
     QUOTER_CONTRACT_ADDRESS: '0xb27308f9F90D607463bb33eA1BeBb41C27CE5AB6',
     rpc: {
-        mainnet: 'https://mainnet.infura.io/v3/0ac57a06f2994538829c14745750d721',
+        mainnet: 'https://mainnet.infura.io/v3/6f6bea5d8f9348efb32c78d9a7d0d46c',
+        linea: 'https://linea-mainnet.infura.io/v3/6f6bea5d8f9348efb32c78d9a7d0d46c',
         localhost: 'http://localhost:8545'
     },
     api: {

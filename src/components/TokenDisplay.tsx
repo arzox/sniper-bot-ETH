@@ -3,6 +3,8 @@ import {Main, TokenInfo} from "../lib/main";
 import {WETH} from "../lib/constants";
 import {FormatTokenPrice} from "./components";
 import {Token} from "@uniswap/sdk-core";
+import Test from "../lib/test";
+import getTokenFromAddress from "../lib/tokenInfo";
 
 
 const TokenDisplay: React.FC<{ isRunning: boolean }> = ({isRunning}) => {
@@ -35,6 +37,7 @@ const TokenDisplay: React.FC<{ isRunning: boolean }> = ({isRunning}) => {
         }
 
         const tokenSniper = new Main(handleToken, handeLoading, soldToken);
+        // const test = new Test(handleToken, handeLoading, soldToken);
 
         if (isRunning) {
             tokenSniper.start();

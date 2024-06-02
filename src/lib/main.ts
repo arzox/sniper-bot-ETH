@@ -24,13 +24,13 @@ class Main {
     refreshRate: number = 1;
     worksheet: Worksheet; // type for sheet, to be defined based on actual use
 
-    tokenSearcher: TokenSearcher = new TokenSearcher(dexToolsApi);
-    tokenWatcher: TokensWatcher = new TokensWatcher((token, priceSold) => this.soldTokenCallback(token, priceSold));
-
     isRunning: boolean = false;
     tokenCallback: TokenCallback;
     isLoadingCallback: IsLoadingCallback;
     soldTokenCallback: SoldTokenCallback;
+
+    tokenSearcher: TokenSearcher = new TokenSearcher(dexToolsApi);
+    tokenWatcher: TokensWatcher = new TokensWatcher((token, priceSold) => this.soldTokenCallback(token, priceSold));
 
     constructor(tokenCallback : TokenCallback, isLoadingCallback: IsLoadingCallback, soldTokenCallback: SoldTokenCallback) {
         this.worksheet = this.tokenSearcher.getSheet()

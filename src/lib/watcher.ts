@@ -10,11 +10,13 @@ interface TokenData {
     ema5: number[];
 }
 
+type SoldTokenCallback = (token: Token, priceSold: string) => void
+
 class TokensWatcher {
     public tokens: { [address: string]: TokenData };
-    private soldTokenCallback: (token: Token, priceSold: string) => void;
+    private soldTokenCallback: SoldTokenCallback;
 
-    constructor(soldTokenCallback: (token: Token, priceSold: string) => void) {
+    constructor(soldTokenCallback: SoldTokenCallback) {
         this.soldTokenCallback = soldTokenCallback;
         this.tokens = {};
     }
@@ -22,7 +24,7 @@ class TokensWatcher {
     async addToken(tokenAddress: string): Promise<void> {
         try {
             const token = await getTokenFromAddress(tokenAddress);
-            this.tokens[tokenAddress] = { prices: [], ema2: [], ema5: [], token: token }
+            this.tokens[token.address] = { prices: [], ema2: [], ema5: [], token: token }
         } catch (e) {
             console.error("Error adding token", e);
         }
@@ -84,6 +86,7 @@ class TokensWatcher {
 
     async sellToken(token: Token): Promise<void> {
         console.log(`Sell signal for ${token.symbol} at ${new Date().toISOString()}`);
+        this.clean(token.address);
         try {
             const price = await quote(WETH, token);
             console.log(`Price: ${price}`)
@@ -92,7 +95,6 @@ class TokensWatcher {
             console.error("Error fetching price", e);
             this.soldTokenCallback(token, "0");
         }
-        this.clean(token.address);
     }
 
     buyToken(token: Token): void {
@@ -100,9 +102,7 @@ class TokensWatcher {
     }
 
     clean(token: string): void {
-        JSON.stringify(this.tokens[token]);
         delete this.tokens[token]
-        JSON.stringify(this.tokens[token]);
     }
 }
 

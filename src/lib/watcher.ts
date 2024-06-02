@@ -55,15 +55,16 @@ class TokensWatcher {
                 const EMA2 = this.calculateEMA(currentToken.prices, currentToken.ema2, 2);
                 if (EMA2 !== null) {
                     currentToken.ema2.push(EMA2);
+                    console.log(currentToken.ema2, currentToken.ema5);
                 }
                 const EMA5 = this.calculateEMA(currentToken.prices, currentToken.ema5,  5);
                 if (EMA5 !== null) {
                     currentToken.ema5.push(EMA5);
-                    console.log(`EMA5: ${EMA5} EMA2: ${EMA2} Price: ${currentToken.prices[currentToken.prices.length - 1]}`)
+                    console.log(currentToken.ema2, currentToken.ema5);
                 }
 
-                if (currentToken.ema5[currentToken.ema5.length - 1] < currentToken.ema2[currentToken.ema2.length - 1]) {
-                    this.sell(token);
+                if (currentToken.ema5[currentToken.ema5.length - 1] > currentToken.ema2[currentToken.ema2.length - 1]) {
+                    this.sellToken(this.tokens[token].token);
                 }
             }
         }
@@ -72,20 +73,24 @@ class TokensWatcher {
     calculateEMA(prices: number[], emas: number[], period: number): number | null{
         const smoothing = 2 / (period + 1);
 
-        if (emas.length === 0){
-            return prices[0]
-        }
-        else if ((prices.length - 1) % period === 0){
-            const lastEma = emas[emas.length - 1]
-            return (prices[prices.length - 1] - lastEma) * smoothing + lastEma
-        } else {
+        if (prices.length <= period){
             return null
+        }
+        else if (emas.length === 0) {
+            return prices.reduce((a, b) => a + b, 0) / period;
+        } else {
+            const lastEma = emas[emas.length - 1];
+            return (prices[prices.length - 1] - lastEma) * smoothing + lastEma;
         }
     }
 
-    sell(token: string): void {
-        console.log(`Sell signal for ${token}`);
-        this.clean(token);
+    sellToken(token: Token): void {
+        console.log(`Sell signal for ${token} at ${new Date().toISOString()}`);
+        this.clean(token.address);
+    }
+
+    buyToken(token: Token): void {
+        console.log(`Buy signal for ${token} at ${new Date().toISOString()}`);
     }
 
     clean(token: string): void {

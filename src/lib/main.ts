@@ -53,18 +53,18 @@ class Main {
             console.log(`Found ${tokens.length} tokens`);
             for (const token of tokens) {
                 const security = await this.tokenSearcher.securityCheck(this.chain, token, false);
-                if (true) {
+                if (security) {
                     this.tokenSearcher.storeToken(this.chain, token, security);
-                    await this.tokenWatcher.addToken(token.address);
-                    getTokenFromAddress(token.address).then(token => {
-                        quote(WETH, token).then((price) => {
-                            this.tokenCallback({token: token, price: price.toFixed(18)})
-                        }).catch(e => {
-                            this.tokenCallback({token: token, price: "0"})
-                            console.error("Error fetching price", e);
-                        });
-                    })
-                    // this.buyToken(token.address);
+                    const tokenEther = await getTokenFromAddress(token.address)
+                    try {
+                        const price = await quote(WETH, tokenEther);
+                        this.tokenCallback({token: token, price: price.toFixed(18)})
+                        await this.tokenWatcher.addToken(token.address)
+                        this.tokenWatcher.buyToken(token);
+                    } catch (e) {
+                        console.error("Error fetching price", e);
+                        this.tokenCallback({token: token, price: "0"})
+                    }
                 }
             }
             this.isLoadingCallback(false);

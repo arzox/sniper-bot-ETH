@@ -1,5 +1,5 @@
 import React, {useEffect, useState} from 'react';
-import {Main, TokenInfo} from "../lib/Main";
+import {Main, TokenInfo} from "../lib/main";
 import {WETH} from "../lib/constants";
 import {FormatTokenPrice} from "./components";
 

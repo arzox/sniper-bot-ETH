@@ -1,9 +1,7 @@
-import axios from 'axios';
 import {Token} from "@uniswap/sdk-core";
 import getTokenFromAddress from "./tokenInfo";
 import {quote} from "./quote";
 import {WETH} from "./constants";
-import {FeeAmount} from "@uniswap/v3-sdk";
 
 interface TokenData {
     token: Token;
@@ -14,8 +12,10 @@ interface TokenData {
 
 class TokensWatcher {
     public tokens: { [address: string]: TokenData };
+    private soldTokenCallback: (token: Token, priceSold: string) => void;
 
-    constructor() {
+    constructor(soldTokenCallback: (token: Token, priceSold: string) => void) {
+        this.soldTokenCallback = soldTokenCallback;
         this.tokens = {};
     }
 
@@ -55,12 +55,10 @@ class TokensWatcher {
                 const EMA2 = this.calculateEMA(currentToken.prices, currentToken.ema2, 2);
                 if (EMA2 !== null) {
                     currentToken.ema2.push(EMA2);
-                    console.log(currentToken.ema2, currentToken.ema5);
                 }
                 const EMA5 = this.calculateEMA(currentToken.prices, currentToken.ema5,  5);
                 if (EMA5 !== null) {
                     currentToken.ema5.push(EMA5);
-                    console.log(currentToken.ema2, currentToken.ema5);
                 }
 
                 if (currentToken.ema5[currentToken.ema5.length - 1] > currentToken.ema2[currentToken.ema2.length - 1]) {
@@ -84,18 +82,29 @@ class TokensWatcher {
         }
     }
 
-    sellToken(token: Token): void {
-        console.log(`Sell signal for ${token} at ${new Date().toISOString()}`);
+    async sellToken(token: Token): Promise<void> {
+        console.log(`Sell signal for ${token.symbol} at ${new Date().toISOString()}`);
+        try {
+            const price = await quote(WETH, token);
+            console.log(`Price: ${price}`)
+            this.soldTokenCallback(token, price.toFixed(18));
+        } catch (e) {
+            console.error("Error fetching price", e);
+            this.soldTokenCallback(token, "0");
+        }
         this.clean(token.address);
     }
 
     buyToken(token: Token): void {
-        console.log(`Buy signal for ${token} at ${new Date().toISOString()}`);
+        console.log(`Buy signal for ${token.symbol} at ${new Date().toISOString()}`);
     }
 
     clean(token: string): void {
-        delete this.tokens[token];
+        JSON.stringify(this.tokens[token]);
+        delete this.tokens[token]
+        JSON.stringify(this.tokens[token]);
     }
 }
 
+// @ts-ignore
 export default TokensWatcher;

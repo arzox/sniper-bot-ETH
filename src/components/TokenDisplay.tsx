@@ -2,6 +2,7 @@ import React, {useEffect, useState} from 'react';
 import {Main, TokenInfo} from "../lib/main";
 import {WETH} from "../lib/constants";
 import {FormatTokenPrice} from "./components";
+import {Token} from "@uniswap/sdk-core";
 
 
 const TokenDisplay: React.FC<{ isRunning: boolean }> = ({isRunning}) => {
@@ -11,15 +12,29 @@ const TokenDisplay: React.FC<{ isRunning: boolean }> = ({isRunning}) => {
     useEffect(() => {
         //setTokens([WETH, WETH], [0, 0])
 
-        function handleNewToken(token: TokenInfo) {
-            setTokens((prevTokens) => [...prevTokens, token]);
+        function handleToken(token: TokenInfo) {
+            setTokens((prevTokens) => {
+                return [...prevTokens, token];
+            });
         }
 
         function handeLoading(isLoading: boolean) {
             setIsLoading(isLoading)
         }
 
-        const tokenSniper = new Main(handleNewToken, handeLoading);
+        function soldToken(token: Token, priceSold: string) {
+            setTokens((prevTokens) => {
+                return prevTokens.map((tokenInfo) => {
+                    if (tokenInfo.token.address === token.address) {
+                        return {...tokenInfo, priceSold: priceSold};
+                    } else {
+                        return tokenInfo;
+                    }
+                });
+            });
+        }
+
+        const tokenSniper = new Main(handleToken, handeLoading, soldToken);
 
         if (isRunning) {
             tokenSniper.start();
@@ -30,13 +45,14 @@ const TokenDisplay: React.FC<{ isRunning: boolean }> = ({isRunning}) => {
 
 
     return (
-        <div className="flex flex-col items-center justify-center w-1/2">
+        <div className="flex flex-col items-center justify-center w-2/3">
             <table className="w-full">
                 <thead className="bg-orange-500 rounded-lg text-sky-50 h-10">
                 <tr className="text-left">
                     <th className="pl-2">Symbol</th>
                     <th className="pl-2">Address</th>
                     <th className="pl-2">Price</th>
+                    <th className="text-center">Sold</th>
                 </tr>
                 </thead>
                 <tbody>
@@ -53,7 +69,8 @@ const TokenDisplay: React.FC<{ isRunning: boolean }> = ({isRunning}) => {
                                                              // href={"https://www.dextools.io/app/en/ether/pair-explorer/" + token.address}
                                                              target="_blank">{tokenInfo.token.symbol}</a></td>
                                 <td className="py-2 pl-2">{tokenInfo.token.address}</td>
-                                <td>${FormatTokenPrice(tokenInfo.price)}</td>
+                                <td className="pl-2">${FormatTokenPrice(tokenInfo.price)}</td>
+                                <td className="text-center">{tokenInfo.priceSold == null ? "❌" : <p className="text-green-500 font-bold">{(parseFloat(tokenInfo.priceSold) / parseFloat(tokenInfo.price) * 100).toString()}%</p>}</td>
                             </tr>
                         ))}
                         {isLoading && (

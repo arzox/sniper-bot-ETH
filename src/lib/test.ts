@@ -15,16 +15,4 @@ export async function test() {
     // this.tokenWatcher.addToken(PEPE.address);
     // const trade = await createTrade("0.0005", PEPE);
     // await executeTrade("0.00005", PEPE, new ethers.Wallet(constants.wallet.privateKey, provider));
-
-    const tokenWatcher = new TokensWatcher();
-    await tokenWatcher.addToken("0x7631698Bf61Ba40F72E534d2e07a9966dFcCF8EF");
-    await tokenWatcher.fetchPrices();
-    tokenWatcher.calculateEMAs();
-    await sleep(1000 * 60);
-    await tokenWatcher.fetchPrices();
-    tokenWatcher.calculateEMAs();
-    await sleep(1000 * 60);
-    await tokenWatcher.fetchPrices();
-    tokenWatcher.calculateEMAs();
-    console.log(tokenWatcher.tokens);
 }

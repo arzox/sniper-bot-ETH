@@ -1,5 +1,5 @@
 import React, {useEffect, useState} from 'react';
-import {TokenSniper, TokenInfo} from "../lib/TokenSniper";
+import {Main, TokenInfo} from "../lib/Main";
 import {WETH} from "../lib/constants";
 import {FormatTokenPrice} from "./components";
 
@@ -19,7 +19,7 @@ const TokenDisplay: React.FC<{ isRunning: boolean }> = ({isRunning}) => {
             setIsLoading(isLoading)
         }
 
-        const tokenSniper = new TokenSniper(handleNewToken, handeLoading);
+        const tokenSniper = new Main(handleNewToken, handeLoading);
 
         if (isRunning) {
             tokenSniper.start();

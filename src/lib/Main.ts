@@ -3,11 +3,9 @@ import {constants, WETH} from "./constants";
 import DextoolsAPI from "./dextoolsAPI";
 import Worksheet from "exceljs/index";
 import TokensWatcher from "./watcher";
-import {Percent, Token} from "@uniswap/sdk-core";
+import {Token} from "@uniswap/sdk-core";
 import {quote} from "./quote";
 import getTokenFromAddress from "./tokenInfo";
-import {createTrade, executeTrade} from "./trade";
-import {ethers} from "ethers";
 
 const dexToolsApi = new DextoolsAPI(constants.api.dextools);
 
@@ -19,9 +17,9 @@ type TokenInfo = {
 type TokenCallback = (token: TokenInfo) => void
 type IsLoadingCallback = (isLoading: boolean) => void
 
-class TokenSniper {
+class Main {
     chain: string = "ether";
-    refreshRate: number = 60 * 4; // in minutes, converted from 60 * 4
+    refreshRate: number = 1;
     worksheet: Worksheet; // type for sheet, to be defined based on actual use
 
     tokenSearcher: TokenSearcher = new TokenSearcher(dexToolsApi);
@@ -47,23 +45,17 @@ class TokenSniper {
     }
 
     async main() {
-        const provider = new ethers.JsonRpcProvider(constants.rpc.mainnet);
-        const PEPE = await getTokenFromAddress("0x6982508145454ce325ddbe47a25d4ec3d2311933");
-        this.tokenWatcher.addToken(PEPE.address);
-        const trade = await createTrade("0.0005", PEPE);
-        //await executeTrade("0.00005", PEPE, new ethers.Wallet(constants.wallet.privateKey, provider));
         while (this.isRunning) {
+            const now = new Date();
             this.isLoadingCallback(true);
             const tokens = await this.tokenSearcher.getTokenList(this.chain, this.refreshRate, 50);
             await this.sleep(1000);
             console.log(`Found ${tokens.length} tokens`);
             for (const token of tokens) {
                 const security = await this.tokenSearcher.securityCheck(this.chain, token, false);
-                if (security) {
+                if (true) {
                     this.tokenSearcher.storeToken(this.chain, token, security);
-
-
-                    this.tokenWatcher.addToken(token.address);
+                    await this.tokenWatcher.addToken(token.address);
                     getTokenFromAddress(token.address).then(token => {
                         quote(WETH, token).then((price) => {
                             this.tokenCallback({token: token, price: price.toFixed(18)})
@@ -78,10 +70,10 @@ class TokenSniper {
             this.isLoadingCallback(false);
 
 
-            this.tokenWatcher.fetchPrices();
+            await this.tokenWatcher.fetchPrices();
             this.tokenWatcher.calculateEMAs();
 
-            await this.sleep(1000 * 60 * this.refreshRate);
+            await this.sleep(now.getTime() + this.refreshRate * 1000 * 60 - new Date().getTime());
         }
         console.log("Done");
     }
@@ -91,5 +83,5 @@ class TokenSniper {
     }
 }
 
-export {TokenSniper};
+export {Main};
 export type { TokenInfo };

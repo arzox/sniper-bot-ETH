@@ -1,5 +1,6 @@
 import {ChangeTextButton, TokenDisplay} from "./components/components";
-import {useState} from "react";
+import {useEffect, useState} from "react";
+import {test} from "./lib/test";
 
 const App = () => {
     const [isRunning, setIsRunning] = useState(false);
@@ -7,6 +8,10 @@ const App = () => {
     const setRunning = () => {
         setIsRunning(!isRunning);
     }
+
+    useEffect(() => {
+        //test()
+    })
 
     return (
         <>

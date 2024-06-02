@@ -56,13 +56,13 @@ class Main {
                 const tokens = await this.tokenSearcher.getTokenList(this.chain, this.refreshRate, 50);
                 await this.sleep(1000);
                 console.log(`Found ${tokens.length} tokens`);
-                for (const token of tokens) {
-                    const security = await this.tokenSearcher.securityCheck(this.chain, token, false);
+                for (const tokenRaw of tokens) {
+                    const security = await this.tokenSearcher.securityCheck(this.chain, tokenRaw, false);
                     if (true) {
-                        this.tokenSearcher.storeToken(this.chain, token, security);
-                        const tokenEther = await getTokenFromAddress(token.address)
+                        const token = await getTokenFromAddress(tokenRaw.address)
+                        this.tokenSearcher.storeToken(this.chain, tokenRaw, security);
                         try {
-                            const price = await quote(WETH, tokenEther);
+                            const price = await quote(WETH, token);
                             this.tokenCallback({token: token, price: price.toFixed(18), priceSold: null})
                             await this.tokenWatcher.addToken(token.address)
                             this.tokenWatcher.buyToken(token);

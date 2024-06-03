@@ -63,6 +63,9 @@ class TokensWatcher {
                     currentToken.ema5.push(EMA5);
                 }
 
+                console.log(currentToken.ema2, currentToken.ema5)
+                console.log(currentToken.prices);
+
                 if (currentToken.ema5[currentToken.ema5.length - 1] > currentToken.ema2[currentToken.ema2.length - 1]) {
                     this.sellToken(this.tokens[token].token);
                 }
@@ -73,7 +76,7 @@ class TokensWatcher {
     calculateEMA(prices: number[], emas: number[], period: number): number | null{
         const smoothing = 2 / (period + 1);
 
-        if (prices.length <= period){
+        if (prices.length < period){
             return null
         }
         else if (emas.length === 0) {

@@ -1,7 +1,9 @@
 import {Token} from "@uniswap/sdk-core";
-import getTokenFromAddress from "./tokenInfo";
+import {getTokenFromAddress, getTokenBalance} from "./tokenInfo";
 import {quote} from "./quote";
-import {WETH} from "./constants";
+import {constants, WETH} from "./constants";
+import {buyTokenForEth, sellTokenForEth} from "./trade";
+import {ethers, Wallet} from "ethers";
 
 interface TokenData {
     token: Token;
@@ -15,10 +17,14 @@ type SoldTokenCallback = (token: Token, priceSold: string) => void
 class TokensWatcher {
     public tokens: { [address: string]: TokenData };
     private soldTokenCallback: SoldTokenCallback;
+    private amountIn: string;
+    private provider = new ethers.JsonRpcProvider(constants.rpc.mainnet);
+    private wallet = new Wallet(constants.wallet.privateKey, this.provider);
 
-    constructor(soldTokenCallback: SoldTokenCallback) {
+    constructor(amountIn: string, soldTokenCallback: SoldTokenCallback) {
         this.soldTokenCallback = soldTokenCallback;
         this.tokens = {};
+        this.amountIn = amountIn;
     }
 
     async addToken(tokenAddress: string): Promise<void> {
@@ -88,12 +94,14 @@ class TokensWatcher {
     }
 
     async sellToken(token: Token): Promise<void> {
-        console.log(`Sell signal for ${token.symbol} at ${new Date().toISOString()}`);
-        this.clean(token.address);
+        const balance = await getTokenBalance(token, this.wallet.address);
         try {
+            await sellTokenForEth(ethers.formatUnits(balance.toString(), token.decimals).toString(), token, this.wallet);
             const price = await quote(WETH, token);
             console.log(`Price: ${price}`)
             this.soldTokenCallback(token, price.toFixed(18));
+            console.log(`Sell signal for ${token.symbol} at ${new Date().toISOString()}`);
+            this.clean(token.address);
         } catch (e) {
             console.error("Error fetching price", e);
             this.soldTokenCallback(token, "0");
@@ -101,7 +109,11 @@ class TokensWatcher {
     }
 
     buyToken(token: Token): void {
-        console.log(`Buy signal for ${token.symbol} at ${new Date().toISOString()}`);
+        buyTokenForEth(this.amountIn, token, this.wallet).then(() => {
+            console.log(`Buy signal for ${token.symbol} at ${new Date().toISOString()}`);
+        }).catch((e) => {
+            console.error("Error buying token", e);
+        });
     }
 
     clean(token: string): void {

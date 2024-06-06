@@ -5,7 +5,8 @@ import Worksheet from "exceljs/index";
 import TokensWatcher from "./watcher";
 import {Token} from "@uniswap/sdk-core";
 import {quote} from "./quote";
-import getTokenFromAddress from "./tokenInfo";
+import {getTokenBalance, getTokenFromAddress} from "./tokenInfo";
+import {ethers} from "ethers";
 
 const dexToolsApi = new DextoolsAPI(constants.api.dextools);
 
@@ -28,7 +29,7 @@ class Main {
     soldTokenCallback: SoldTokenCallback;
 
     tokenSearcher: TokenSearcher = new TokenSearcher(dexToolsApi);
-    tokenWatcher: TokensWatcher = new TokensWatcher((token, priceSold) => this.soldTokenCallback(token, priceSold));
+    tokenWatcher: TokensWatcher = new TokensWatcher("0.005", (token, priceSold) => this.soldTokenCallback(token, priceSold));
 
     private intervalId: NodeJS.Timeout | null;
 

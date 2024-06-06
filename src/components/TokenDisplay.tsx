@@ -3,7 +3,7 @@ import {Main, TokenInfo} from "../lib/main";
 import {WETH} from "../lib/constants";
 import {FormatTokenPrice} from "./components";
 import {Token} from "@uniswap/sdk-core";
-import getTokenFromAddress from "../lib/tokenInfo";
+import {getTokenFromAddress} from "../lib/tokenInfo";
 
 
 const TokenDisplay: React.FC<{ isRunning: boolean }> = ({isRunning}) => {

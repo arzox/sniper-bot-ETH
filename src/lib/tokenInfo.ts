@@ -3,20 +3,9 @@ import {constants} from "./constants";
 import {Token} from "@uniswap/sdk-core";
 
 const ERC20_ABI = [
-    {
-        "constant": true,
-        "inputs": [],
-        "name": "symbol",
-        "outputs": [{ "name": "", "type": "string" }],
-        "type": "function"
-    },
-    {
-        "constant": true,
-        "inputs": [],
-        "name": "decimals",
-        "outputs": [{ "name": "", "type": "uint8" }],
-        "type": "function"
-    }
+    "function balanceOf(address owner) view returns (uint256)",
+    "function symbol() view returns (string)",
+    "function decimals() view returns (uint8)"
 ];
 
 const getTokenFromAddress = async (address: string) => {
@@ -33,4 +22,10 @@ const getTokenFromAddress = async (address: string) => {
     )
 };
 
-export default getTokenFromAddress;
+const getTokenBalance = async (token: Token, address: string) => {
+    const provider = new JsonRpcProvider(constants.rpc.mainnet);
+    const tokenContract = new Contract(token.address, ERC20_ABI, provider);
+    return tokenContract.balanceOf(address);
+}
+
+export {getTokenFromAddress, getTokenBalance};

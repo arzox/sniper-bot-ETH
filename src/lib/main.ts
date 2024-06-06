@@ -22,9 +22,7 @@ type SoldTokenCallback = (token: Token, priceSold: string) => void
 class Main {
     chain: string = "ether";
     refreshRate: number = 1;
-    worksheet: Worksheet; // type for sheet, to be defined based on actual use
-
-    isRunning: boolean = false;
+    isRunning: boolean;
     tokenCallback: TokenCallback;
     isLoadingCallback: IsLoadingCallback;
     soldTokenCallback: SoldTokenCallback;
@@ -32,54 +30,59 @@ class Main {
     tokenSearcher: TokenSearcher = new TokenSearcher(dexToolsApi);
     tokenWatcher: TokensWatcher = new TokensWatcher((token, priceSold) => this.soldTokenCallback(token, priceSold));
 
-    constructor(tokenCallback : TokenCallback, isLoadingCallback: IsLoadingCallback, soldTokenCallback: SoldTokenCallback) {
-        this.worksheet = this.tokenSearcher.getSheet()
+    private intervalId: NodeJS.Timeout | null;
+
+    constructor(tokenCallback: TokenCallback, isLoadingCallback: IsLoadingCallback, soldTokenCallback: SoldTokenCallback) {
         this.tokenCallback = tokenCallback;
         this.isLoadingCallback = isLoadingCallback;
         this.soldTokenCallback = soldTokenCallback;
+
+        this.isRunning = false
+        this.intervalId = null;
     }
 
     public start(): void {
         this.isRunning = true;
-        this.main().then(() => console.log("Done"));
+        this.main()
+        this.intervalId = setInterval(() => {
+            this.main();
+        }, this.refreshRate * 1000 * 60); // Run task every refreshRate minutes
     }
 
-    public stop(): void {
+    public async stop(): Promise<void> {
         this.isRunning = false;
     }
 
     async main() {
-        while (this.isRunning || Object.keys(this.tokenWatcher.tokens).length > 0) {
-            const now = new Date();
-            if (this.isRunning) {
-                this.isLoadingCallback(true);
-                const tokens = await this.tokenSearcher.getTokenList(this.chain, this.refreshRate, 50);
-                await this.sleep(1000);
-                console.log(`Found ${tokens.length} tokens`);
-                for (const tokenRaw of tokens) {
-                    const security = await this.tokenSearcher.securityCheck(this.chain, tokenRaw, false);
-                    if (true) {
-                        const token = await getTokenFromAddress(tokenRaw.address)
-                        this.tokenSearcher.storeToken(this.chain, tokenRaw, security);
-                        try {
-                            const price = await quote(WETH, token);
-                            this.tokenCallback({token: token, price: price.toFixed(18), priceSold: null})
-                            await this.tokenWatcher.addToken(token.address)
-                            this.tokenWatcher.buyToken(token);
-                        } catch (e) {
-                            console.error("Error getting the token data", e);
-                        }
+        if (this.isRunning) {
+            this.isLoadingCallback(true);
+            const tokens = await this.tokenSearcher.getTokenList(this.chain, this.refreshRate, 50);
+            await this.sleep(1000);
+            console.log(`Found ${tokens.length} tokens`);
+            for (const tokenRaw of tokens) {
+                const security = await this.tokenSearcher.securityCheck(this.chain, tokenRaw, true);
+                if (security) {
+                    const token = await getTokenFromAddress(tokenRaw.address)
+                    this.tokenSearcher.storeToken(this.chain, tokenRaw, security);
+                    try {
+                        const price = await quote(WETH, token);
+                        this.tokenCallback({token: token, price: price.toFixed(18), priceSold: null})
+                        await this.tokenWatcher.addToken(token.address)
+                        this.tokenWatcher.buyToken(token);
+                    } catch (e) {
+                        console.error("Error getting the token data", e);
                     }
                 }
-                this.isLoadingCallback(false);
             }
-
-            await this.tokenWatcher.fetchPrices();
-            this.tokenWatcher.calculateEMAs();
-
-            await this.sleep(now.getTime() + this.refreshRate * 1000 * 60 - new Date().getTime());
+            this.isLoadingCallback(false);
         }
-        console.log("Done");
+        const isTokenRemaining = Object.keys(this.tokenWatcher.tokens).length > 0;
+        if (!isTokenRemaining && !this.isRunning && this.intervalId) {
+            clearInterval(this.intervalId);
+            console.log("Done")
+        }
+        await this.tokenWatcher.fetchPrices();
+        this.tokenWatcher.calculateEMAs();
     }
 
     sleep(ms: number): Promise<void> {
@@ -88,4 +91,4 @@ class Main {
 }
 
 export {Main};
-export type { TokenInfo };
+export type {TokenInfo};

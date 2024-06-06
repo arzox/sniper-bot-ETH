@@ -83,8 +83,7 @@ class TokenSearcher {
 
             if (audit.isPotentiallyScam === "yes" || audit.isHoneypot !== "no" ||
                 (audit.isContractRenounced !== "yes") ||
-                (audit.sellTax.max > 0.1 || audit.buyTax.max > 0.02) ||
-                (info.holders < 10)) {
+                (audit.sellTax.max > 0.1 || audit.buyTax.max > 0.02)) {
                 throw new Error();
             }
 
@@ -104,7 +103,7 @@ class TokenSearcher {
             "creationTime",
             "asc",
             addHours(subMinutes(now, timeRange + 4.5), 2).toISOString(),
-            addHours(subMinutes(now, 4), 2).toISOString(),
+            addHours(subMinutes(now, 4.5), 2).toISOString(),
             0,
             pageSize
         );

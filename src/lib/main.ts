@@ -21,17 +21,19 @@ type IsLoadingCallback = (isLoading: boolean) => void
 type SoldTokenCallback = (token: Token, priceSold: string) => void
 
 class Main {
-    chain: string = "ether";
-    refreshRate: number = 1;
+    readonly chain: string = "ether";
+    readonly refreshRate: number = 1;
+    readonly isBuying: boolean = true;
+
     isRunning: boolean;
+    private intervalId: NodeJS.Timeout | null;
+
     tokenCallback: TokenCallback;
     isLoadingCallback: IsLoadingCallback;
     soldTokenCallback: SoldTokenCallback;
 
     tokenSearcher: TokenSearcher = new TokenSearcher(dexToolsApi);
     tokenWatcher: TokensWatcher = new TokensWatcher("0.005", (token, priceSold) => this.soldTokenCallback(token, priceSold));
-
-    private intervalId: NodeJS.Timeout | null;
 
     constructor(tokenCallback: TokenCallback, isLoadingCallback: IsLoadingCallback, soldTokenCallback: SoldTokenCallback) {
         this.tokenCallback = tokenCallback;
@@ -69,7 +71,7 @@ class Main {
                         const price = await quote(WETH, token);
                         this.tokenCallback({token: token, price: price.toFixed(18), priceSold: null})
                         await this.tokenWatcher.addToken(token.address)
-                        this.tokenWatcher.buyToken(token);
+                        if (this.isBuying) this.tokenWatcher.buyToken(token);
                     } catch (e) {
                         console.error("Error getting the token data", e);
                     }

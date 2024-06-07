@@ -1,4 +1,4 @@
-import React, {useEffect, useState} from 'react';
+import React, {useEffect, useRef, useState} from 'react';
 import {Main, TokenInfo} from "../lib/main";
 import {WETH} from "../lib/constants";
 import {FormatTokenPrice} from "./components";
@@ -9,8 +9,7 @@ import {getTokenFromAddress} from "../lib/tokenInfo";
 const TokenDisplay: React.FC<{ isRunning: boolean }> = ({isRunning}) => {
     const [tokens, setTokens] = useState<TokenInfo[]>([]);
     const [isLoading, setIsLoading] = useState(false);
-    const [alreadyLaunched, setAlreadyLaunched] = useState(false);
-    const [tokenSniper, setTokenSniper] = useState<Main | null>(null);
+    const tokenSniper = useRef<Main | null>(null);
 
     useEffect(() => {
         //setTokens([WETH, WETH], [0, 0])
@@ -21,9 +20,8 @@ const TokenDisplay: React.FC<{ isRunning: boolean }> = ({isRunning}) => {
             });
         }
 
-        function handeLoading(isLoading: boolean) {
+        function handleLoading(isLoading: boolean) {
             setIsLoading(isLoading)
-            setAlreadyLaunched(true)
         }
 
         function soldToken(token: Token, priceSold: string) {
@@ -38,16 +36,16 @@ const TokenDisplay: React.FC<{ isRunning: boolean }> = ({isRunning}) => {
             });
         }
 
-        if (!tokenSniper) {
-            setTokenSniper(new Main(handleToken, handeLoading, soldToken));
+        if (!tokenSniper.current) {
+            tokenSniper.current = new Main(handleToken, handleLoading, soldToken);
         }
 
         if (isRunning && tokenSniper) {
-            tokenSniper.start();
-        } else if (alreadyLaunched && tokenSniper) {
-            tokenSniper.stop();
+            tokenSniper.current.start();
+        } else if (tokenSniper && tokenSniper.current.isRunning) {
+            tokenSniper.current.stop();
         }
-    }, [isRunning]);
+    }, [isRunning, tokenSniper]);
 
 
     return (

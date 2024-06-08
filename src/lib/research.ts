@@ -81,16 +81,15 @@ class TokenSearcher {
 
             await this.sleep(1000);
 
-            if (audit.isPotentiallyScam === "yes" || audit.isHoneypot !== "no" ||
-                (audit.isContractRenounced !== "yes") ||
-                (audit.sellTax.max > 0.1 || audit.buyTax.max > 0.02)) {
-                throw new Error();
-            }
+            if (audit.isPotentiallyScam === "yes") throw new Error(`Potentially scam token: ${audit.isPotentiallyScam}`);
+            if (audit.isHoneypot !== "no") throw new Error(`Honeypot token: ${audit.isHoneypot}`);
+            if (audit.isContractRenounced !== "yes") throw new Error(`Contract not renounced: ${audit.isContractRenounced}`);
+            if (audit.sellTax.max > 0.1 || audit.buyTax.max > 0.02) throw new Error(`High tax: ${audit.sellTax.max} ${audit.buyTax.max}`);
 
             return { address: token.address, ...audit, ...info };
         } catch (error: any) {
             if (debug) {
-                console.error(`Security check failed`);
+                console.error(`Security check failed \n${error}`);
             }
             return false;
         }

@@ -1,10 +1,21 @@
 import { createClient } from '@de-fi/sdk'
 import {constants} from "./constants";
+import axios from "axios"
 
 const client = createClient({
-    url: 'https://graphql-sdk-url',
-    headers: {
-        'X-Api-Key': constants.api.defi
+    fetcherMethod: async (operation) => {
+        const instance = axios.create({
+            timeout: 10000,
+            headers: {
+                Accept: 'application/json',
+                'Content-Type': 'application/json',
+                'X-Api-Key': constants.api.defi,
+            }
+        })
+        const response = await instance.post("https://public-api.de.fi/graphql",
+           JSON.stringify(operation)
+        );
+        return await response.data;
     }
 });
 
@@ -22,6 +33,7 @@ const getContractAudit = async (tokenAddress: string) => {
         ]
     });
     return query.data?.scannerProject;
+
 }
 
 export {getContractAudit}

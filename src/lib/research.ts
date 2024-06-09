@@ -71,14 +71,14 @@ class TokenSearcher {
             const contractAudit = await getContractAudit(token.address);
 
             // Check contract audit
-            const isContractNotValid = contractAudit && (contractAudit.stats?.scammed === true || (contractAudit.stats?.percentage && contractAudit.stats?.percentage < 5))
+            const isContractValid = contractAudit && (contractAudit.stats?.scammed === true && (contractAudit.stats?.percentage && contractAudit.stats?.percentage > 5))
 
             // Check if the token is a honeypot
             const isNotTokenValid = honeyPot.summary["riskLevel"] > 1 || !honeyPot.simulationResult.hasOwnProperty("buyTax")
                 || !honeyPot.simulationResult.hasOwnProperty("sellTax") || honeyPot.simulationResult?.buyTax > 5 || honeyPot.simulationResult?.sellTax > 5
                 || honeyPot.pair.liquidity < 10000;
 
-            if (isContractNotValid) {
+            if (!isContractValid) {
                 throw Error(`Contract audit failed: ${JSON.stringify(contractAudit, null, 2)}`);
             }
             if (isNotTokenValid) {

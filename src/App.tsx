@@ -14,7 +14,7 @@ const App = () => {
     }
 
     useEffect(() => {
-        //test();
+        test();
     })
 
     return (

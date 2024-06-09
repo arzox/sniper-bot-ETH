@@ -3,18 +3,13 @@ import {toZonedTime } from 'date-fns-tz'
 import { Workbook, Cell } from 'exceljs';
 import dextoolsAPI from "./dextoolsAPI";
 import Worksheet from "exceljs/index";
+import {isHoneyPot} from "./honeyPotAPI";
+import {Simulate} from "react-dom/test-utils";
+import error = Simulate.error;
 
 interface Token {
     address: string;
     symbol: string;
-}
-
-interface Audit {
-    isPotentiallyScam: string;
-    isHoneypot: string;
-    isContractRenounced: string;
-    sellTax: { max: number };
-    buyTax: { max: number };
 }
 
 interface Info {
@@ -71,22 +66,16 @@ class TokenSearcher {
 
     public async securityCheck(chain: string, token: Token, debug: boolean = false): Promise<any | false> {
         try {
-            const auditResponse = await this.api.getTokenAudit(chain, token.address);
-            const audit: Audit = auditResponse.data;
+            const honeyPot = await isHoneyPot(token.address);
+            console.log(`${token.symbol} liquidty: ${honeyPot.pair.liquidity}`);
+            const isNotTokenValid = honeyPot.summary["riskLevel"] > 1 || !honeyPot.simulationResult.hasOwnProperty("buyTax")
+                || !honeyPot.simulationResult.hasOwnProperty("sellTax") || honeyPot.simulationResult?.buyTax > 5 || honeyPot.simulationResult?.sellTax > 5
+                || honeyPot.pair.liquidity < 1000;
+            if (isNotTokenValid) {
+                throw Error(`HoneyPot risk level too high: ${JSON.stringify(honeyPot.summary, null, 2)}`);
+            }
 
-            await this.sleep(1000);
-
-            const infoResponse = await this.api.getTokenInfo(chain, token.address);
-            const info: Info = infoResponse.data;
-
-            await this.sleep(1000);
-
-            if (audit.isPotentiallyScam === "yes") throw new Error(`Potentially scam token: ${audit.isPotentiallyScam}`);
-            if (audit.isHoneypot !== "no") throw new Error(`Honeypot token: ${audit.isHoneypot}`);
-            if (audit.isContractRenounced !== "yes") throw new Error(`Contract not renounced: ${audit.isContractRenounced}`);
-            if (audit.sellTax.max > 0.1 || audit.buyTax.max > 0.02) throw new Error(`High tax: ${audit.sellTax.max} ${audit.buyTax.max}`);
-
-            return { address: token.address, ...audit, ...info };
+            return { address: token.address};
         } catch (error: any) {
             if (debug) {
                 console.error(`Security check failed \n${error}`);

@@ -23,7 +23,7 @@ type SoldTokenCallback = (token: Token, priceSold: string) => void
 class Main {
     readonly chain: string = "ether";
     readonly refreshRate: number = 1;
-    readonly isBuying: boolean = true;
+    readonly isBuying: boolean = false;
 
     isRunning: boolean;
     private intervalId: NodeJS.Timeout | null;

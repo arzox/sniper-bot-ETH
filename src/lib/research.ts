@@ -68,10 +68,14 @@ class TokenSearcher {
     public async securityCheck(chain: string, token: Token, debug: boolean = false): Promise<IsHoneypotData | false> {
         try {
             const honeyPot = await isHoneyPot(token.address);
-            const contractAudit = await getContractAudit(token.address);
+            const audit = await getContractAudit(token.address);
+            const contractAudit = audit?.scannerProject;
+            const liquidityAudit = audit?.scannerLiquidityAnalysis;
+            await this.sleep(1000)
 
             // Check contract audit
-            const isContractValid = contractAudit && (contractAudit.stats?.scammed === true && (contractAudit.stats?.percentage && contractAudit.stats?.percentage > 5))
+            const isContractValid = contractAudit && (contractAudit.stats?.scammed === false && (contractAudit.stats?.percentage && contractAudit.stats?.percentage >= 70))
+            const isLiquidityValid = liquidityAudit && (liquidityAudit.isEnoughLiquidityLocked === true)
 
             // Check if the token is a honeypot
             const isNotTokenValid = honeyPot.summary["riskLevel"] > 1 || !honeyPot.simulationResult.hasOwnProperty("buyTax")
@@ -79,7 +83,10 @@ class TokenSearcher {
                 || honeyPot.pair.liquidity < 10000;
 
             if (!isContractValid) {
-                throw Error(`Contract audit failed: ${JSON.stringify(contractAudit, null, 2)}`);
+                throw Error(`${token.symbol} Contract audit failed: ${JSON.stringify(contractAudit, null, 2)}`);
+            }
+            if (!isLiquidityValid) {
+                throw Error(`${token.symbol} Liquidity audit failed: ${JSON.stringify(liquidityAudit, null, 2)}`);
             }
             if (isNotTokenValid) {
                 throw Error(`HoneyPot risk level too high: ${JSON.stringify(honeyPot.summary, null, 2)}`);

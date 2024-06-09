@@ -16,6 +16,7 @@ export interface Constants {
     api: {
         dextools: string,
         defi: string,
+        defi2: string,
         etherscan: string
     },
     wallet: {
@@ -35,6 +36,7 @@ export const constants: Constants = {
     api: {
         dextools: "NiPgDIMeP919s4QlpvfU335aC3CxyVE592ig4xnf",
         defi: "a78bee61bb84408eb68a5cc2b90c6edb",
+        defi2: "8876efe735b340e6bc625a438a170823",
         etherscan: "S9FJYI8GMHG413XZB7NN96D7RRDXMZNCNS"
     },
     wallet: {

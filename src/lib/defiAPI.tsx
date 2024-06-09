@@ -9,7 +9,7 @@ const client = createClient({
             headers: {
                 Accept: 'application/json',
                 'Content-Type': 'application/json',
-                'X-Api-Key': constants.api.defi,
+                'X-Api-Key': constants.api.defi2,
             }
         })
         const response = await instance.post("https://public-api.de.fi/graphql",
@@ -30,9 +30,17 @@ const getContractAudit = async (tokenAddress: string) => {
                 },
                 name: true,
             }
-        ]
+        ],
+        scannerLiquidityAnalysis: [{where: {address: tokenAddress, chainId: 1}},
+            {
+                isEnoughLiquidityLocked: true,
+                issues: {
+                    scwTitle: true,
+                }
+            }
+        ],
     });
-    return query.data?.scannerProject;
+    return query.data;
 
 }
 

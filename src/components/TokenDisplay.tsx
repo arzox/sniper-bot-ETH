@@ -94,7 +94,7 @@ const TokenDisplay: React.FC<TokenDisplayProps> = ({isRunning, isDebubg, isBuyin
                                                              target="_blank">{tokenInfo.token.symbol}</a></td>
                                 <td className="py-2 pl-2">{tokenInfo.token.address}</td>
                                 <td className="pl-2">${FormatTokenPrice(tokenInfo.price)}</td>
-                                <td className="text-center">{tokenInfo.priceSold == null ? "❌" : <p className={(getGain(tokenInfo) >= 100 ? "text-green-500" : "text-red-500") + "font-bold"}>{getGain(tokenInfo).toString()}%</p>}</td>
+                                <td className="text-center">{tokenInfo.priceSold == null ? "❌" : <p className={(getGain(tokenInfo) >= 100 ? "text-green-500" : "text-red-500") + " font-bold"}>{getGain(tokenInfo).toString()}%</p>}</td>
                             </tr>
                         ))}
                         {isLoading && (

@@ -64,6 +64,10 @@ class TokensWatcher {
                         this.clean(tokenAddress);
                     }
                 }
+
+                if (this._isDebug) {
+                    console.log(`Token: ${tokenInfo.token.symbol}\nPrices: ${tokenInfo.prices}`)
+                }
             }
         }
     }
@@ -93,11 +97,7 @@ class TokensWatcher {
                 }
 
                 if (currentToken.ema5[currentToken.ema5.length - 1] > currentToken.ema2[currentToken.ema2.length - 1]) {
-                    this.sellToken(this.tokens[token].token);
-                }
-
-                if (this._isDebug) {
-                    console.log(`Token: ${token}\nPrices: ${currentToken.prices}`)
+                    this.sellToken(currentToken.token);
                 }
             }
         }

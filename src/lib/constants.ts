@@ -15,8 +15,8 @@ export interface Constants {
     }
     api: {
         dextools: string,
-        oinch: string,
-        uniswap: string
+        defi: string,
+        etherscan: string
     },
     wallet: {
         address: string,
@@ -33,9 +33,9 @@ export const constants: Constants = {
         localhost: 'http://localhost:8545'
     },
     api: {
-        "dextools": "NiPgDIMeP919s4QlpvfU335aC3CxyVE592ig4xnf",
-        "oinch": "V047jxydzQHDuKDFMIkAPr72vGltgYfR",
-        "uniswap": ""
+        dextools: "NiPgDIMeP919s4QlpvfU335aC3CxyVE592ig4xnf",
+        defi: "a78bee61bb84408eb68a5cc2b90c6edb",
+        etherscan: "S9FJYI8GMHG413XZB7NN96D7RRDXMZNCNS"
     },
     wallet: {
         address: "0xb709C27C02d0cCb7Ed41520aD3f817e248C07E92",

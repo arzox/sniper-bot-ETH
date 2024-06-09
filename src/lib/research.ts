@@ -6,6 +6,7 @@ import Worksheet from "exceljs/index";
 import {isHoneyPot, IsHoneypotData} from "./honeyPotAPI";
 import {Simulate} from "react-dom/test-utils";
 import error = Simulate.error;
+import {getContractAudit} from "./defiAPI";
 
 interface Token {
     address: string;
@@ -67,10 +68,19 @@ class TokenSearcher {
     public async securityCheck(chain: string, token: Token, debug: boolean = false): Promise<IsHoneypotData | false> {
         try {
             const honeyPot = await isHoneyPot(token.address);
-            console.log(`${token.symbol} liquidty: ${honeyPot.pair.liquidity}`);
+            const contractAudit = await getContractAudit(token.address);
+
+            // Check contract audit
+            const isContractNotValid = contractAudit && (contractAudit.stats?.scammed === true || (contractAudit.stats?.percentage && contractAudit.stats?.percentage < 5))
+
+            // Check if the token is a honeypot
             const isNotTokenValid = honeyPot.summary["riskLevel"] > 1 || !honeyPot.simulationResult.hasOwnProperty("buyTax")
                 || !honeyPot.simulationResult.hasOwnProperty("sellTax") || honeyPot.simulationResult?.buyTax > 5 || honeyPot.simulationResult?.sellTax > 5
                 || honeyPot.pair.liquidity < 10000;
+
+            if (isContractNotValid) {
+                throw Error(`Contract audit failed: ${JSON.stringify(contractAudit, null, 2)}`);
+            }
             if (isNotTokenValid) {
                 throw Error(`HoneyPot risk level too high: ${JSON.stringify(honeyPot.summary, null, 2)}`);
             }

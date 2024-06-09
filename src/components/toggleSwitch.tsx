@@ -18,7 +18,7 @@ const ToggleSwitch: React.FC<ToggleSwitchProps> = ({label, changeState}) => {
 
     return (
         <div className="flex items-center justify-between w-[270px]">
-            <p>{label}</p>
+            <p className="text-[#212a2b]">{label}</p>
             <div className="toggle-switch">
                 <input className="toggle-input" type="checkbox"/>
                 <label className={`toggle-label ${isOn ? 'on' : 'off'}`} onClick={handleToggle} ref={labelRef}></label>

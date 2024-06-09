@@ -3,7 +3,7 @@ import {toZonedTime } from 'date-fns-tz'
 import { Workbook, Cell } from 'exceljs';
 import dextoolsAPI from "./dextoolsAPI";
 import Worksheet from "exceljs/index";
-import {isHoneyPot} from "./honeyPotAPI";
+import {isHoneyPot, IsHoneypotData} from "./honeyPotAPI";
 import {Simulate} from "react-dom/test-utils";
 import error = Simulate.error;
 
@@ -64,18 +64,18 @@ class TokenSearcher {
         this.linkLastCell(this.worksheet, 3, info.address, chain);
     }
 
-    public async securityCheck(chain: string, token: Token, debug: boolean = false): Promise<any | false> {
+    public async securityCheck(chain: string, token: Token, debug: boolean = false): Promise<IsHoneypotData | false> {
         try {
             const honeyPot = await isHoneyPot(token.address);
             console.log(`${token.symbol} liquidty: ${honeyPot.pair.liquidity}`);
             const isNotTokenValid = honeyPot.summary["riskLevel"] > 1 || !honeyPot.simulationResult.hasOwnProperty("buyTax")
                 || !honeyPot.simulationResult.hasOwnProperty("sellTax") || honeyPot.simulationResult?.buyTax > 5 || honeyPot.simulationResult?.sellTax > 5
-                || honeyPot.pair.liquidity < 1000;
+                || honeyPot.pair.liquidity < 10000;
             if (isNotTokenValid) {
                 throw Error(`HoneyPot risk level too high: ${JSON.stringify(honeyPot.summary, null, 2)}`);
             }
 
-            return { address: token.address};
+            return honeyPot;
         } catch (error: any) {
             if (debug) {
                 console.error(`Security check failed \n${error}`);

@@ -2,7 +2,7 @@ import axios from "axios";
 
 const url = "https://api.honeypot.is/v2/"
 
-type IsHoneypotData = {
+export type IsHoneypotData = {
     token: {
         name: string;
         symbol: string;

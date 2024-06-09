@@ -7,6 +7,7 @@ import {Token} from "@uniswap/sdk-core";
 import {quote} from "./quote";
 import {getTokenBalance, getTokenFromAddress} from "./tokenInfo";
 import {ethers} from "ethers";
+import {IsHoneypotData} from "./honeyPotAPI";
 
 const dexToolsApi = new DextoolsAPI(constants.api.dextools);
 
@@ -23,9 +24,10 @@ type SoldTokenCallback = (token: Token, priceSold: string) => void
 class Main {
     readonly chain: string = "ether";
     readonly refreshRate: number = 1;
-    readonly isBuying: boolean = false;
+    isBuying: boolean = false;
 
     isRunning: boolean;
+    private isDebug: boolean = false;
     private intervalId: NodeJS.Timeout | null;
 
     tokenCallback: TokenCallback;
@@ -63,18 +65,10 @@ class Main {
             await this.sleep(1000);
             console.log(`Found ${tokens.length} tokens`);
             for (const tokenRaw of tokens) {
-                const security = await this.tokenSearcher.securityCheck(this.chain, tokenRaw, true);
+                const security = await this.tokenSearcher.securityCheck(this.chain, tokenRaw, this.isDebug);
                 if (security) {
-                    const token = await getTokenFromAddress(tokenRaw.address)
-                    this.tokenSearcher.storeToken(this.chain, tokenRaw, security);
-                    try {
-                        const price = await quote(WETH, token);
-                        this.tokenCallback({token: token, price: price.toFixed(18), priceSold: null})
-                        await this.tokenWatcher.addToken(token.address)
-                        if (this.isBuying) this.tokenWatcher.buyToken(token);
-                    } catch (e) {
-                        console.error("Error getting the token data", e);
-                    }
+                    this.debugToken(security);
+                    await this.storeBuyAndCallbackToken(tokenRaw, security);
                 }
             }
             this.isLoadingCallback(false);
@@ -86,6 +80,38 @@ class Main {
         }
         await this.tokenWatcher.fetchPrices();
         this.tokenWatcher.calculateEMAs();
+    }
+
+    private debugToken(security: IsHoneypotData) {
+        if (this.isDebug) {
+            console.log(`Token ${security.token.symbol} is secure\n`
+                + `Liquidity: ${security.pair.liquidity}\n`
+                + `Risk level: ${security.summary.riskLevel}\n`
+                + `Buy tax: ${security.simulationResult.buyTax}\n`
+                + `Sell tax: ${security.simulationResult.sellTax}`
+            );
+        }
+    }
+
+    private async storeBuyAndCallbackToken(tokenRaw: any, security: IsHoneypotData) {
+        const token = await getTokenFromAddress(tokenRaw.address)
+        try {
+            const price = await quote(WETH, token);
+            this.tokenCallback({token: token, price: price.toFixed(18), priceSold: null})
+            await this.tokenWatcher.addToken(token.address)
+            if (this.isBuying) this.tokenWatcher.buyToken(token);
+        } catch (e) {
+            console.error("Error getting the token data", e);
+        }
+    }
+
+    public setDebug(isDebug: boolean): void {
+        this.isDebug = isDebug;
+        this.tokenWatcher.isDebug = isDebug
+    }
+
+    public setBuying(isBuying: boolean): void {
+        this.isBuying = isBuying;
     }
 
     sleep(ms: number): Promise<void> {

@@ -5,8 +5,13 @@ import {FormatTokenPrice} from "./components";
 import {Token} from "@uniswap/sdk-core";
 import {getTokenFromAddress} from "../lib/tokenInfo";
 
+type TokenDisplayProps = {
+    isRunning: boolean;
+    isDebubg: boolean;
+    isBuying: boolean;
+}
 
-const TokenDisplay: React.FC<{ isRunning: boolean }> = ({isRunning}) => {
+const TokenDisplay: React.FC<TokenDisplayProps> = ({isRunning, isDebubg, isBuying}) => {
     const [tokens, setTokens] = useState<TokenInfo[]>([]);
     const [isLoading, setIsLoading] = useState(false);
     const tokenSniper = useRef<Main | null>(null);
@@ -47,6 +52,21 @@ const TokenDisplay: React.FC<{ isRunning: boolean }> = ({isRunning}) => {
         }
     }, [isRunning, tokenSniper]);
 
+    useEffect(() => {
+        if (tokenSniper.current) {
+            tokenSniper.current.setDebug(isDebubg);
+        }
+
+        if (tokenSniper.current) {
+            tokenSniper.current.setBuying(isBuying);
+        }
+    }, [isDebubg, isBuying, tokenSniper]);
+
+
+    function getGain(tokenInfo: TokenInfo) {
+        // @ts-ignore
+        return parseFloat(tokenInfo.priceSold) / parseFloat(tokenInfo.price) * 100;
+    }
 
     return (
         <div className="flex flex-col items-center justify-center w-2/3">
@@ -74,7 +94,7 @@ const TokenDisplay: React.FC<{ isRunning: boolean }> = ({isRunning}) => {
                                                              target="_blank">{tokenInfo.token.symbol}</a></td>
                                 <td className="py-2 pl-2">{tokenInfo.token.address}</td>
                                 <td className="pl-2">${FormatTokenPrice(tokenInfo.price)}</td>
-                                <td className="text-center">{tokenInfo.priceSold == null ? "❌" : <p className="text-green-500 font-bold">{(parseFloat(tokenInfo.priceSold) / parseFloat(tokenInfo.price) * 100).toString()}%</p>}</td>
+                                <td className="text-center">{tokenInfo.priceSold == null ? "❌" : <p className={(getGain(tokenInfo) >= 100 ? "text-green-500" : "text-red-500") + "font-bold"}>{getGain(tokenInfo).toString()}%</p>}</td>
                             </tr>
                         ))}
                         {isLoading && (
@@ -88,6 +108,8 @@ const TokenDisplay: React.FC<{ isRunning: boolean }> = ({isRunning}) => {
             </table>
         </div>
     );
+
 };
+
 
 export default TokenDisplay;

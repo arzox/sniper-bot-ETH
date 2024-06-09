@@ -4,6 +4,7 @@ import {quote} from "./quote";
 import {constants, WETH} from "./constants";
 import {buyTokenForEth, sellTokenForEth} from "./trade";
 import {ethers, Wallet} from "ethers";
+import {isHoneyPot} from "./honeyPotAPI";
 
 interface TokenData {
     token: Token;
@@ -20,6 +21,8 @@ class TokensWatcher {
     private amountIn: string;
     private provider = new ethers.JsonRpcProvider(constants.rpc.mainnet);
     private wallet = new Wallet(constants.wallet.privateKey, this.provider);
+
+    private _isDebug: boolean = false;
 
     constructor(amountIn: string, soldTokenCallback: SoldTokenCallback) {
         this.soldTokenCallback = soldTokenCallback;
@@ -49,11 +52,31 @@ class TokensWatcher {
         if (Object.keys(this.tokens).length > 0) {
             for (const [tokenAddress, tokenInfo] of Object.entries(this.tokens)) {
                 const price = await this.fetchTokenPrice(tokenInfo);
+                let prices = this.tokens[tokenAddress].prices;
                 if (price !== null) {
-                    this.tokens[tokenAddress].prices.push(price);
+                    prices.push(price);
+                }
+
+                if (price === prices[prices.length - 1]) {
+                    const isDump =  await this.isTokenDump(tokenInfo.token);
+                    if (isDump) {
+                        this.soldTokenCallback(tokenInfo.token, "0");
+                        this.clean(tokenAddress);
+                    }
                 }
             }
         }
+    }
+
+    async isTokenDump(token: Token): Promise<boolean> {
+        const isHoneypot = await isHoneyPot(token.address);
+        if (isHoneypot.pair.liquidity < 100) {
+            return true;
+        }
+        if (isHoneypot.summary.riskLevel > 60 && this.isDebug) {
+            console.log(`${token.symbol} Risk level too high: ${isHoneypot.summary.riskLevel}`);
+        }
+        return false
     }
 
     calculateEMAs(): void {
@@ -69,11 +92,12 @@ class TokensWatcher {
                     currentToken.ema5.push(EMA5);
                 }
 
-                console.log(currentToken.ema2, currentToken.ema5)
-                console.log(currentToken.prices);
-
                 if (currentToken.ema5[currentToken.ema5.length - 1] > currentToken.ema2[currentToken.ema2.length - 1]) {
                     this.sellToken(this.tokens[token].token);
+                }
+
+                if (this._isDebug) {
+                    console.log(`Token: ${token}\nPrices: ${currentToken.prices}`)
                 }
             }
         }
@@ -118,6 +142,11 @@ class TokensWatcher {
 
     clean(token: string): void {
         delete this.tokens[token]
+    }
+
+
+    set isDebug(value: boolean) {
+        this._isDebug = value;
     }
 }
 

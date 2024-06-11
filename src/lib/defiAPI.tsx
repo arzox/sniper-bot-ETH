@@ -30,7 +30,13 @@ const getContractAudit = async (tokenAddress: string) => {
                 },
                 name: true,
             }
-        ],
+        ]
+    });
+    return query.data?.scannerProject;
+}
+
+const getLiquidityAudit = async (tokenAddress: string) => {
+    const query = await client.query({
         scannerLiquidityAnalysis: [{where: {address: tokenAddress, chainId: 1}},
             {
                 isEnoughLiquidityLocked: true,
@@ -40,8 +46,7 @@ const getContractAudit = async (tokenAddress: string) => {
             }
         ],
     });
-    return query.data;
-
+    return query.data?.scannerLiquidityAnalysis;
 }
 
-export {getContractAudit}
+export {getContractAudit, getLiquidityAudit}

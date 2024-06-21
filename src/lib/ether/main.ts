@@ -1,23 +1,21 @@
 import TokenSearcher from "./research";
 import {constants, WETH} from "./constants";
 import DextoolsAPI from "./dextoolsAPI";
-import Worksheet from "exceljs/index";
 import TokensWatcher from "./watcher";
 import {Token} from "@uniswap/sdk-core";
 import {quote} from "./quote";
-import {getTokenBalance, getTokenFromAddress} from "./tokenInfo";
-import {ethers} from "ethers";
+import {getTokenFromAddress} from "./tokenInfo";
 import {IsHoneypotData} from "./honeyPotAPI";
 
 const dexToolsApi = new DextoolsAPI(constants.api.dextools);
 
-type TokenInfo = {
+type TokenAndPrice = {
     token: Token;
     price: string;
     priceSold: string | null;
 }
 
-type TokenCallback = (token: TokenInfo) => void
+type TokenCallback = (token: TokenAndPrice) => void
 type IsLoadingCallback = (isLoading: boolean) => void
 type SoldTokenCallback = (token: Token, priceSold: string) => void
 
@@ -52,10 +50,12 @@ class Main {
         this.intervalId = setInterval(() => {
             this.main();
         }, this.refreshRate * 1000 * 60); // Run task every refreshRate minutes
+        //this.tokenSearcher.start();
     }
 
     public async stop(): Promise<void> {
         this.isRunning = false;
+        //this.tokenSearcher.stop();
     }
 
     async main() {
@@ -120,4 +120,4 @@ class Main {
 }
 
 export {Main};
-export type {TokenInfo};
+export type {TokenAndPrice};

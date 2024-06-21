@@ -1,9 +1,7 @@
 import React, {useEffect, useRef, useState} from 'react';
-import {Main, TokenInfo} from "../lib/main";
-import {WETH} from "../lib/constants";
+import {Main, TokenAndPrice} from "../lib/ether/main";
 import {FormatTokenPrice} from "./components";
 import {Token} from "@uniswap/sdk-core";
-import {getTokenFromAddress} from "../lib/tokenInfo";
 
 type TokenDisplayProps = {
     isRunning: boolean;
@@ -12,14 +10,14 @@ type TokenDisplayProps = {
 }
 
 const TokenDisplay: React.FC<TokenDisplayProps> = ({isRunning, isDebubg, isBuying}) => {
-    const [tokens, setTokens] = useState<TokenInfo[]>([]);
+    const [tokens, setTokens] = useState<TokenAndPrice[]>([]);
     const [isLoading, setIsLoading] = useState(false);
     const tokenSniper = useRef<Main | null>(null);
 
     useEffect(() => {
         //setTokens([WETH, WETH], [0, 0])
 
-        function handleToken(token: TokenInfo) {
+        function handleToken(token: TokenAndPrice) {
             setTokens((prevTokens) => {
                 return [...prevTokens, token];
             });
@@ -63,7 +61,7 @@ const TokenDisplay: React.FC<TokenDisplayProps> = ({isRunning, isDebubg, isBuyin
     }, [isDebubg, isBuying, tokenSniper]);
 
 
-    function getGain(tokenInfo: TokenInfo) {
+    function getGain(tokenInfo: TokenAndPrice) {
         // @ts-ignore
         return parseFloat(tokenInfo.priceSold) / parseFloat(tokenInfo.price) * 100;
     }

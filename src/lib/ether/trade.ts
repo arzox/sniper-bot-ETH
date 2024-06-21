@@ -3,7 +3,7 @@ import {constants, WETH} from './constants'
 import { Token, CurrencyAmount, TradeType, Percent } from "@uniswap/sdk-core";
 import { Route, Pair, Trade } from '@uniswap/v2-sdk'
 import {createPair} from "./quote";
-import {FormatTokenPrice} from "../components/components";
+import {FormatTokenPrice} from "../../components/components";
 
 export async function createTrade(amountIn: string, tokenIn: Token, tokenOut: Token): Promise<Trade<Token, Token, TradeType>> {
     const pair = await createPair(tokenIn, tokenOut);

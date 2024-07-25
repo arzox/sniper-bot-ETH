@@ -9,7 +9,7 @@ const ERC20_ABI = [
 ];
 
 const getTokenFromAddress = async (address: string) => {
-    const provider = new JsonRpcProvider(constants.rpc.mainnet);
+    const provider = new JsonRpcProvider(constants.rpc.mainnet2);
     const tokenContract = new Contract(getAddress(address), ERC20_ABI, provider);
 
     const symbol = await tokenContract.symbol();

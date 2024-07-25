@@ -10,7 +10,9 @@ export interface Constants {
     QUOTER_CONTRACT_ADDRESS: string
     rpc: {
         mainnet: string
+        mainnet2: string
         wsMainnet: string
+        wsMainnet2: string
         linea: string
         localhost: string
     }
@@ -31,7 +33,9 @@ export const constants: Constants = {
     QUOTER_CONTRACT_ADDRESS: '0xb27308f9F90D607463bb33eA1BeBb41C27CE5AB6',
     rpc: {
         mainnet: 'https://mainnet.infura.io/v3/6f6bea5d8f9348efb32c78d9a7d0d46c',
+        mainnet2: 'https://mainnet.infura.io/v3/084547bd54d443d5bf489e0e12472746',
         wsMainnet: 'wss://mainnet.infura.io/ws/v3/6f6bea5d8f9348efb32c78d9a7d0d46c',
+        wsMainnet2: 'wss://mainnet.infura.io/ws/v3/084547bd54d443d5bf489e0e12472746',
         linea: 'https://linea-mainnet.infura.io/v3/6f6bea5d8f9348efb32c78d9a7d0d46c',
         localhost: 'http://localhost:8545' 
     },

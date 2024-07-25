@@ -32,7 +32,7 @@ class Main {
     isLoadingCallback: IsLoadingCallback;
     soldTokenCallback: SoldTokenCallback;
 
-    tokenSearcher: TokenSearcher = new TokenSearcher(dexToolsApi);
+    tokenSearcher: TokenSearcher = new TokenSearcher(dexToolsApi, (token) => this.processNewToken(token));
     tokenWatcher: TokensWatcher = new TokensWatcher("0.005", (token, priceSold) => this.soldTokenCallback(token, priceSold));
 
     constructor(tokenCallback: TokenCallback, isLoadingCallback: IsLoadingCallback, soldTokenCallback: SoldTokenCallback) {
@@ -50,28 +50,28 @@ class Main {
         this.intervalId = setInterval(() => {
             this.main();
         }, this.refreshRate * 1000 * 60); // Run task every refreshRate minutes
-        //this.tokenSearcher.start();
+        this.tokenSearcher.start();
     }
 
     public async stop(): Promise<void> {
         this.isRunning = false;
-        //this.tokenSearcher.stop();
+        this.tokenSearcher.stop();
     }
 
     async main() {
         if (this.isRunning) {
             this.isLoadingCallback(true);
-            const tokens = await this.tokenSearcher.getTokenList(this.chain, this.refreshRate, 50);
-            await this.sleep(1000);
-            console.log(`Found ${tokens.length} tokens`);
-            for (const tokenRaw of tokens) {
-                const security = await this.tokenSearcher.securityCheck(this.chain, tokenRaw, this.isDebug);
-                if (security) {
-                    this.debugToken(security);
-                    await this.storeBuyAndCallbackToken(tokenRaw, security);
-                }
-            }
-            this.isLoadingCallback(false);
+            // const tokens = await this.tokenSearcher.getTokenList(this.chain, this.refreshRate, 50);
+            // await this.sleep(1000);
+            // console.log(`Found ${tokens.length} tokens`);
+            // for (const tokenRaw of tokens) {
+            //     const security = await this.tokenSearcher.securityCheck(this.chain, tokenRaw, this.isDebug);
+            //     if (security) {
+            //         this.debugToken(security);
+            //         await this.storeBuyAndCallbackToken(tokenRaw, security);
+            //     }
+            // }
+            // this.isLoadingCallback(false);
         }
         const isTokenRemaining = Object.keys(this.tokenWatcher.tokens).length > 0;
         if (!isTokenRemaining && !this.isRunning && this.intervalId) {
@@ -114,8 +114,12 @@ class Main {
         this.isBuying = isBuying;
     }
 
-    sleep(ms: number): Promise<void> {
-        return new Promise(resolve => setTimeout(resolve, ms));
+    public async processNewToken(token: Token) {
+        const security = await this.tokenSearcher.securityCheck(token, this.isDebug);
+        if (security) {
+            this.debugToken(security);
+            await this.storeBuyAndCallbackToken(token, security);
+        }
     }
 }
 

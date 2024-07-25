@@ -17,7 +17,7 @@ const Ether = () => {
     }
 
     useEffect(() => {
-        test();
+        //test();
     })
 
     return (

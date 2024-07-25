@@ -6,33 +6,27 @@ import Web3 from 'web3';
 import {constants} from "./constants";
 import {getTokenFromAddress} from "./tokenInfo";
 import {getContractAudit, getLiquidityAudit} from "./defiAPI";
+import {Token} from "@uniswap/sdk-core";
+import {Transaction} from "ethers";
+import {funWithRetry, sleep} from "./utils";
 
-
-interface Token {
-    address: string;
-    symbol: string;
-}
 
 class TokenSearcher {
     private api: dextoolsAPI;
     private web3;
-    private txQueue: string[];
     private subscription: any;
     private tokenProccesing: NodeJS.Timeout | null = null;
+    private timeOffset: number = 10;
+    private tokenFoundCallback: (token: Token) => void;
 
-    constructor(api: dextoolsAPI) {
+    constructor(api: dextoolsAPI, tokenFoundCallback: (token: Token) => void) {
         this.api = api;
-        this.web3 = new Web3(new Web3.providers.WebsocketProvider(constants.rpc.wsMainnet));
-        this.txQueue = [];
+        this.web3 = new Web3(new Web3.providers.WebsocketProvider(constants.rpc.wsMainnet2));
+        this.tokenFoundCallback = tokenFoundCallback;
     }
 
     public async start() {
-        this.subscription = await this.listenForTokenCreation();
-        await this.sleep(500);
-
-        this.tokenProccesing = setInterval(() => {
-            this.processToken();
-        }, 500);
+        this.subscription = await this.listenForBlockCreation();
     }
 
     public stop() {
@@ -40,10 +34,10 @@ class TokenSearcher {
         if (this.tokenProccesing) clearInterval(this.tokenProccesing);
     }
 
-    public async securityCheck(chain: string, token: Token, debug: boolean = false): Promise<IsHoneypotData | false> {
+    public async securityCheck(token: Token, debug: boolean = false): Promise<IsHoneypotData | false> {
         try {
             // Check if the token is a honeypot
-            const honeyPot = await isHoneyPot(token.address);
+            const honeyPot = await funWithRetry(() => {isHoneyPot(token.address)}, 5, 60 * 2);
             const isNotTokenValid = honeyPot.summary["riskLevel"] > 1 || !honeyPot.simulationResult.hasOwnProperty("buyTax")
                 || !honeyPot.simulationResult.hasOwnProperty("sellTax") || honeyPot.simulationResult?.buyTax > 5 || honeyPot.simulationResult?.sellTax > 5
                 || honeyPot.pair.liquidity < 10000;
@@ -84,8 +78,8 @@ class TokenSearcher {
         const tokensListResponse = await this.api.getTokenList(chain,
             "creationTime",
             "asc",
-            addHours(subMinutes(now, timeRange + 5), 2).toISOString(),
-            addHours(subMinutes(now, 5), 2).toISOString(),
+            addHours(subMinutes(now, timeRange + this.timeOffset), 2).toISOString(),
+            addHours(subMinutes(now, this.timeOffset), 2).toISOString(),
             0,
             pageSize
         );
@@ -93,63 +87,44 @@ class TokenSearcher {
         return tokensListResponse.data.tokens;
     }
 
-    private async sleep(number: number) {
-        return new Promise(resolve => setTimeout(resolve, number));
-    }
-
-    private async listenForTokenCreation(): Promise<any> {
-        // Subscribe to pending transactions
-        const subscription = await this.web3.eth.subscribe('pendingTransactions', (error: Error, txHash: string) => {
-            if (error) console.error(error);
-        });
-
-        subscription.on('data', (txHash: string) => {
-            this.txQueue.push(txHash);
-        });
-
-        return subscription
-    }
-
-    private getLastHash() {
-        let txHash = null;
-        do {
-            txHash = this.txQueue.pop();
-        } while (txHash === null || txHash === undefined);
-        return txHash;
-    }
-
-    private async getTransactionWithRetry(txHash: string, retries = 10, delayMs = 4000): Promise<any> {
-        for (let i = 0; i < retries; i++) {
-            try {
-                const tx = await this.web3.eth.getTransaction(this.web3.utils.hexToBytes(txHash));
-                if (tx) {
-                    return tx;
-                }
-            } catch (error) {}
-            await this.sleep(delayMs);
-        }
-    }
-
-    private async processToken() {
-        let txHash = this.getLastHash();
+    private async processTransaction(tx: Transaction) {
         try {
-            const tx = await this.getTransactionWithRetry(txHash);
-
-            // If the transaction has no to address, it's a contract creation
             if (tx && !tx.to) {
-                console.log(`New contract creation: ${txHash}`)
-                const receipt = await this.web3.eth.getTransactionReceipt(txHash);
+                if (tx.hash === null || tx.hash === undefined) return;
+                const receipt = await this.web3.eth.getTransactionReceipt(this.web3.utils.hexToBytes(tx.hash));
                 const contractAddress = receipt.contractAddress;
 
                 // Check if the new contract is an ERC20 token by calling a known function
                 if (contractAddress) {
-                    // It's an ERC20 token
-                    console.log(`New token created: ${JSON.stringify(await getTokenFromAddress(contractAddress))}`)
+                    console.log(`New contract address: ${contractAddress}`)
+                    const token = await getTokenFromAddress(contractAddress);
+                    if (token) {
+                        this.tokenFoundCallback(token);
+                    }
                 }
             }
         } catch (e) {
-            console.error(e);
+            console.log("Not a token")
         }
+    }
+
+    private async listenForBlockCreation() {
+        const subscription = await this.web3.eth.subscribe('newBlockHeaders', (error: Error, blockHeader: any) => {
+            if (error) console.error(error);
+        });
+
+        subscription.on('data', async (blockHeader: any) => {
+            this.web3.eth.getBlock(blockHeader.number, true).then(async (block) => {
+                await sleep(1000 * 60 * this.timeOffset);
+                if (block.transactions.length === 0) return;
+                for (const tx of block.transactions) {
+                    // @ts-ignore
+                    this.processTransaction(tx);
+                }
+            });
+        });
+
+        return subscription;
     }
 }
 
